@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Азбука</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+    <!-- Главный экран -->
+    <section id="homeScreen" class="screen active">
+
+        <div class="logo">
+            <h1>АЗБУКА</h1>
+            <p>Изучаем русский алфавит</p>
+        </div>
+
+        <button id="startButton" class="mainButton">
+            Начать
+        </button>
+
+    </section>
+
+
+
+    <!-- Экран букв -->
+
+    <section id="lettersScreen" class="screen">
+
+        <div class="header">
+
+            <button id="backHomeButton" class="backButton">
+                ←
+            </button>
+
+            <h2>Русский алфавит</h2>
+
+        </div>
+
+        <div id="lettersGrid" class="lettersGrid">
+
+        </div>
+
+    </section>
+
+
+
+    <!-- Экран буквы -->
+
+    <section id="letterScreen" class="screen">
+
+        <div class="header">
+
+            <button id="backLettersButton" class="backButton">
+                ←
+            </button>
+
+            <h2 id="letterTitle">
+                Буква А
+            </h2>
+
+        </div>
+
+        <div class="bigLetter" id="bigLetter">
+            А
+        </div>
+
+        <div id="wordsBlock" class="wordsBlock">
+
+        </div>
+
+        <button id="playGameButton" class="playButton">
+            Играть
+        </button>
+
+    </section>
+
+
+
+
+    <!-- Игра -->
+
+    <section id="gameScreen" class="screen">
+
+        <div class="header">
+
+            <button id="backLetterButton" class="backButton">
+                ←
+            </button>
+
+            <h2>Воздушные шарики</h2>
+
+        </div>
+
+        <div class="gameTitle">
+
+            Найди букву
+
+            <span id="targetLetter" class="targetLetter">
+                А
+            </span>
+
+        </div>
+
+        <div id="balloons" class="balloons">
+
+        </div>
+
+        <div id="confetti"></div>
+
+    </section>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
