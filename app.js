@@ -1,37 +1,74 @@
+const transliteration = {
+    а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "zh", з: "z",
+    и: "i", й: "short-i", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r",
+    с: "s", т: "t", у: "u", ф: "f", х: "kh", ц: "ts", ч: "ch", ш: "sh", щ: "shch",
+    ъ: "hard-sign", ы: "yery", ь: "soft-sign", э: "eh", ю: "yu", я: "ya"
+};
+const wordTransliteration = {
+    а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "zh", з: "z",
+    и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r",
+    с: "s", т: "t", у: "u", ф: "f", х: "kh", ц: "ts", ч: "ch", ш: "sh", щ: "shch",
+    ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya"
+};
+
+function getLetterFolderName(letter) {
+    const normalizedLetter = letter.toLowerCase();
+
+    return transliteration[normalizedLetter] ?? normalizedLetter;
+}
+
+function createWord(letter, text) {
+    const imageName = text
+        .toLowerCase()
+        .split("")
+        .map((character) => wordTransliteration[character] ?? character)
+        .join("")
+        .replace(/\s+/g, "-");
+
+    return {
+        text,
+        image: `assets/images/letters/${getLetterFolderName(letter)}/${imageName}.png`
+    };
+}
+
+function createWords(letter, words) {
+    return words.map((word) => createWord(letter, word));
+}
+
 const alphabet = [
-    { letter: "А", words: ["Арбуз", "Аист", "Апельсин", "Автобус", "Акула"] },
-    { letter: "Б", words: ["Бабочка", "Банан", "Белка", "Барабан", "Бегемот"] },
-    { letter: "В", words: ["Велосипед", "Вишня", "Волк", "Ворона", "Ведро"] },
-    { letter: "Г", words: ["Груша", "Гриб", "Гусеница", "Гитара", "Голубь"] },
-    { letter: "Д", words: ["Дом", "Дерево", "Дельфин", "Дорога", "Дракон"] },
-    { letter: "Е", words: ["Енот", "Ежевика", "Ель", "Ехидна", "Еда"] },
-    { letter: "Ё", words: ["Ёж", "Ёлка", "Ёрш", "Ёжик", "Ёлочная игрушка"] },
-    { letter: "Ж", words: ["Жираф", "Жук", "Жаба", "Журавль", "Жёлудь"] },
-    { letter: "З", words: ["Заяц", "Зебра", "Зонт", "Звезда", "Земляника"] },
-    { letter: "И", words: ["Игрушка", "Индюк", "Игла", "Ирис", "Индейка"] },
-    { letter: "Й", words: ["Йогурт", "Йод", "Йети", "Йорк", "Йога"] },
-    { letter: "К", words: ["Корабль", "Кот", "Карандаш", "Кукла", "Крокодил"] },
-    { letter: "Л", words: ["Лиса", "Лев", "Луна", "Лимон", "Лодка"] },
-    { letter: "М", words: ["Мяч", "Медведь", "Машина", "Молоко", "Море"] },
-    { letter: "Н", words: ["Носорог", "Носки", "Небо", "Нитки", "Нора"] },
-    { letter: "О", words: ["Облако", "Окно", "Остров", "Одуванчик", "Осьминог"] },
-    { letter: "П", words: ["Птица", "Панда", "Пирог", "Пальма", "Паровоз"] },
-    { letter: "Р", words: ["Радуга", "Рыба", "Ракета", "Робот", "Ромашка"] },
-    { letter: "С", words: ["Солнце", "Собака", "Слон", "Сыр", "Самолёт"] },
-    { letter: "Т", words: ["Тигр", "Торт", "Туча", "Трактор", "Телефон"] },
-    { letter: "У", words: ["Утка", "Улитка", "Улыбка", "Улица", "Утюг"] },
-    { letter: "Ф", words: ["Фонарик", "Фламинго", "Фея", "Флаг", "Фрукты"] },
-    { letter: "Х", words: ["Хлеб", "Хомяк", "Хвост", "Холодильник", "Художник"] },
-    { letter: "Ц", words: ["Цыплёнок", "Цветок", "Цирк", "Цапля", "Цифра"] },
-    { letter: "Ч", words: ["Черепаха", "Часы", "Чайник", "Чемодан", "Чашка"] },
-    { letter: "Ш", words: ["Шар", "Шуба", "Шоколад", "Шишка", "Шмель"] },
-    { letter: "Щ", words: ["Щука", "Щенок", "Щётка", "Щавель", "Щит"] },
-    { letter: "Ъ", words: ["Подъезд", "Объём", "Съёмка", "Объявление", "Съезд"] },
-    { letter: "Ы", words: ["Сыр", "Мышь", "Рыба", "Дым", "Тыква"] },
-    { letter: "Ь", words: ["Семья", "Конь", "Пальто", "Мальчик", "Медведь"] },
-    { letter: "Э", words: ["Эскимо", "Экран", "Экскаватор", "Эхо", "Этажерка"] },
-    { letter: "Ю", words: ["Юла", "Юбка", "Юрта", "Юнга", "Юмор"] },
-    { letter: "Я", words: ["Яблоко", "Ягода", "Якорь", "Ящерица", "Яйцо"] }
+    { letter: "А", words: createWords("А", ["Арбуз", "Аист", "Апельсин", "Автобус", "Акула"]) },
+    { letter: "Б", words: createWords("Б", ["Бабочка", "Банан", "Белка", "Барабан", "Бегемот"]) },
+    { letter: "В", words: createWords("В", ["Велосипед", "Вишня", "Волк", "Ворона", "Ведро"]) },
+    { letter: "Г", words: createWords("Г", ["Груша", "Гриб", "Гусеница", "Гитара", "Голубь"]) },
+    { letter: "Д", words: createWords("Д", ["Дом", "Дерево", "Дельфин", "Дорога", "Дракон"]) },
+    { letter: "Е", words: createWords("Е", ["Енот", "Ежевика", "Ель", "Ехидна", "Еда"]) },
+    { letter: "Ё", words: createWords("Ё", ["Ёж", "Ёлка", "Ёрш", "Ёжик", "Ёлочная игрушка"]) },
+    { letter: "Ж", words: createWords("Ж", ["Жираф", "Жук", "Жаба", "Журавль", "Жёлудь"]) },
+    { letter: "З", words: createWords("З", ["Заяц", "Зебра", "Зонт", "Звезда", "Земляника"]) },
+    { letter: "И", words: createWords("И", ["Игрушка", "Индюк", "Игла", "Ирис", "Индейка"]) },
+    { letter: "Й", words: createWords("Й", ["Йогурт", "Йод", "Йети", "Йорк", "Йога"]) },
+    { letter: "К", words: createWords("К", ["Корабль", "Кот", "Карандаш", "Кукла", "Крокодил"]) },
+    { letter: "Л", words: createWords("Л", ["Лиса", "Лев", "Луна", "Лимон", "Лодка"]) },
+    { letter: "М", words: createWords("М", ["Мяч", "Медведь", "Машина", "Молоко", "Море"]) },
+    { letter: "Н", words: createWords("Н", ["Носорог", "Носки", "Небо", "Нитки", "Нора"]) },
+    { letter: "О", words: createWords("О", ["Облако", "Окно", "Остров", "Одуванчик", "Осьминог"]) },
+    { letter: "П", words: createWords("П", ["Птица", "Панда", "Пирог", "Пальма", "Паровоз"]) },
+    { letter: "Р", words: createWords("Р", ["Радуга", "Рыба", "Ракета", "Робот", "Ромашка"]) },
+    { letter: "С", words: createWords("С", ["Солнце", "Собака", "Слон", "Сыр", "Самолёт"]) },
+    { letter: "Т", words: createWords("Т", ["Тигр", "Торт", "Туча", "Трактор", "Телефон"]) },
+    { letter: "У", words: createWords("У", ["Утка", "Улитка", "Улыбка", "Улица", "Утюг"]) },
+    { letter: "Ф", words: createWords("Ф", ["Фонарик", "Фламинго", "Фея", "Флаг", "Фрукты"]) },
+    { letter: "Х", words: createWords("Х", ["Хлеб", "Хомяк", "Хвост", "Холодильник", "Художник"]) },
+    { letter: "Ц", words: createWords("Ц", ["Цыплёнок", "Цветок", "Цирк", "Цапля", "Цифра"]) },
+    { letter: "Ч", words: createWords("Ч", ["Черепаха", "Часы", "Чайник", "Чемодан", "Чашка"]) },
+    { letter: "Ш", words: createWords("Ш", ["Шар", "Шуба", "Шоколад", "Шишка", "Шмель"]) },
+    { letter: "Щ", words: createWords("Щ", ["Щука", "Щенок", "Щётка", "Щавель", "Щит"]) },
+    { letter: "Ъ", words: createWords("Ъ", ["Подъезд", "Объём", "Съёмка", "Объявление", "Съезд"]) },
+    { letter: "Ы", words: createWords("Ы", ["Сыр", "Мышь", "Рыба", "Дым", "Тыква"]) },
+    { letter: "Ь", words: createWords("Ь", ["Семья", "Конь", "Пальто", "Мальчик", "Медведь"]) },
+    { letter: "Э", words: createWords("Э", ["Эскимо", "Экран", "Экскаватор", "Эхо", "Этажерка"]) },
+    { letter: "Ю", words: createWords("Ю", ["Юла", "Юбка", "Юрта", "Юнга", "Юмор"]) },
+    { letter: "Я", words: createWords("Я", ["Яблоко", "Ягода", "Якорь", "Ящерица", "Яйцо"]) }
 ];
 
 let selectedLetter = null;
@@ -39,23 +76,178 @@ const wordIndexes = Object.fromEntries(alphabet.map((letterData) => [letterData.
 
 const lettersGrid = document.getElementById("lettersGrid");
 const bigLetter = document.getElementById("bigLetter");
+const letterImage = document.getElementById("letterImage");
 const wordsBlock = document.getElementById("wordsBlock");
 const targetLetter = document.getElementById("targetLetter");
 const balloons = document.getElementById("balloons");
 const screens = document.querySelectorAll(".screen");
 const balloonColors = ["#ff6b6b", "#4dabf7", "#51cf66", "#ff922b", "#9775fa"];
-const celebrationPhrases = ["Молодец!", "Отлично!", "Супер!", "Здорово!"];
+const celebrationPhrases = ["Молодец!"];
 const balloonSize = 90;
 let correctBalloonsLeft = 0;
 let nextRoundTimeout = null;
 let animationFrameId = null;
 let lastAnimationTime = null;
 let movingBalloons = [];
+let currentImagePath = null;
+let imageRequestId = 0;
+let imageRetryTimeout = null;
+const imageTransitionDuration = 260;
+const imageRetryDelay = 5000;
+const imageCache = new Map();
+const imageRequests = new Map();
+let letterSelectionTimeout = null;
+const letterSelectionDelay = 150;
+const completedLettersStorageKey = "azbukaCompletedLetters";
+const completedLetters = new Set(loadCompletedLetters());
+const letterCards = new Map();
+
+function loadCompletedLetters() {
+    try {
+        const storedLetters = JSON.parse(localStorage.getItem(completedLettersStorageKey) ?? "[]");
+
+        return Array.isArray(storedLetters)
+            ? storedLetters.filter((letter) => alphabet.some((letterData) => letterData.letter === letter))
+            : [];
+    } catch {
+        return [];
+    }
+}
+
+function updateLetterCardProgress(letter) {
+    letterCards.get(letter)?.classList.toggle("is-completed", completedLetters.has(letter));
+}
+
+function markLetterCompleted(letter) {
+    completedLetters.add(letter);
+    updateLetterCardProgress(letter);
+
+    try {
+        localStorage.setItem(completedLettersStorageKey, JSON.stringify([...completedLetters]));
+    } catch {
+        // Progress still remains available until the page is reloaded.
+    }
+}
 
 function showScreen(screenId) {
     screens.forEach((screen) => {
         screen.classList.toggle("active", screen.id === screenId);
     });
+}
+
+function clearImageRetry() {
+    clearTimeout(imageRetryTimeout);
+    imageRetryTimeout = null;
+}
+
+function replaceWordVisual(nextVisual) {
+    nextVisual.classList.remove("is-entering", "is-visible", "is-leaving");
+    nextVisual.classList.add("imageVisual", "is-entering");
+    letterImage.replaceChildren(nextVisual);
+
+    requestAnimationFrame(() => {
+        nextVisual.classList.add("is-visible");
+    });
+}
+
+function createLoadingIndicator() {
+    const indicator = document.createElement("div");
+
+    indicator.className = "imageLoadingIndicator";
+    indicator.setAttribute("role", "status");
+    indicator.setAttribute("aria-label", "Загрузка изображения");
+    return indicator;
+}
+
+function hideLoadingIndicator(indicator) {
+    if (!indicator) {
+        return;
+    }
+
+    indicator.classList.add("is-hidden");
+    setTimeout(() => indicator.remove(), imageTransitionDuration);
+}
+
+function requestImage(imagePath, bypassCache = false) {
+    const cachedImage = imageCache.get(imagePath);
+
+    if (cachedImage) {
+        return Promise.resolve(cachedImage);
+    }
+
+    if (!bypassCache && imageRequests.has(imagePath)) {
+        return imageRequests.get(imagePath);
+    }
+
+    const imageRequest = new Promise((resolve, reject) => {
+        const image = new Image();
+
+        image.addEventListener("load", () => {
+            imageCache.set(imagePath, image);
+            imageRequests.delete(imagePath);
+            resolve(image);
+        }, { once: true });
+        image.addEventListener("error", () => {
+            imageRequests.delete(imagePath);
+            reject();
+        }, { once: true });
+        image.src = bypassCache ? `${imagePath}?updated=${Date.now()}` : imagePath;
+    });
+
+    imageRequests.set(imagePath, imageRequest);
+    return imageRequest;
+}
+
+function scheduleImageRetry(word, requestId) {
+    clearImageRetry();
+    imageRetryTimeout = setTimeout(() => {
+        if (requestId === imageRequestId && currentImagePath === word.image) {
+            loadWordImage(word, requestId, null, true);
+        }
+    }, imageRetryDelay);
+}
+
+function loadWordImage(word, requestId, loadingIndicator, bypassCache = false) {
+    requestImage(word.image, bypassCache)
+        .then((image) => {
+        if (requestId !== imageRequestId || currentImagePath !== word.image) {
+            return;
+        }
+
+        image.alt = word.text;
+        hideLoadingIndicator(loadingIndicator);
+        replaceWordVisual(image);
+        clearImageRetry();
+    })
+    .catch(() => {
+        if (requestId === imageRequestId && currentImagePath === word.image) {
+            hideLoadingIndicator(loadingIndicator);
+            scheduleImageRetry(word, requestId);
+        }
+    });
+}
+
+function showWordImage(word) {
+    const requestId = ++imageRequestId;
+    const cachedImage = imageCache.get(word.image);
+
+    currentImagePath = word.image;
+    clearImageRetry();
+
+    if (cachedImage) {
+        cachedImage.alt = word.text;
+        replaceWordVisual(cachedImage);
+        return;
+    }
+
+    const placeholder = document.createElement("div");
+    const loadingIndicator = createLoadingIndicator();
+
+    placeholder.className = "imagePlaceholder";
+    placeholder.textContent = selectedLetter.letter;
+    placeholder.appendChild(loadingIndicator);
+    replaceWordVisual(placeholder);
+    loadWordImage(word, requestId, loadingIndicator);
 }
 
 function showLetter(letterData) {
@@ -65,7 +257,8 @@ function showLetter(letterData) {
 
     wordIndexes[selectedLetter.letter] = (wordIndex + 1) % selectedLetter.words.length;
     bigLetter.textContent = selectedLetter.letter;
-    wordsBlock.innerHTML = `<div class="wordCard">${word}</div>`;
+    wordsBlock.innerHTML = `<div class="wordCard">${word.text}</div>`;
+    showWordImage(word);
     showScreen("letterScreen");
 }
 
@@ -162,6 +355,7 @@ function createExplosion(balloon) {
 }
 
 function finishRound() {
+    markLetterCompleted(selectedLetter.letter);
     stopBalloonAnimation();
     balloons.innerHTML = "";
 
@@ -291,9 +485,21 @@ function createGameRound() {
 
 alphabet.forEach((letterData) => {
     const card = document.createElement("div");
+
     card.className = "letterCard";
     card.textContent = letterData.letter;
-    card.addEventListener("click", () => showLetter(letterData));
+    letterCards.set(letterData.letter, card);
+    updateLetterCardProgress(letterData.letter);
+    card.addEventListener("click", () => {
+        if (letterSelectionTimeout !== null) {
+            return;
+        }
+
+        letterSelectionTimeout = setTimeout(() => {
+            letterSelectionTimeout = null;
+            showLetter(letterData);
+        }, letterSelectionDelay);
+    });
     lettersGrid.appendChild(card);
 });
 
