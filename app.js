@@ -11,6 +11,226 @@ const wordTransliteration = {
     ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya"
 };
 
+const customWordImages = {
+    В: {
+        Велосипед: "bicycle.png",
+        Вишня: "cherry.png",
+        Волк: "wolf.png",
+        Ворона: "crow.png",
+        Ведро: "bucket.png"
+    },
+    Г: {
+        Груша: "pear.png",
+        Гриб: "mushroom.png",
+        Гусеница: "caterpillar.png",
+        Гитара: "guitar.png",
+        Голубь: "pigeon.png"
+    },
+    Д: {
+        Дом: "house.png",
+        Дерево: "tree.png",
+        Дельфин: "dolphin.png",
+        Дорога: "road.png",
+        Дракон: "dragon.png"
+    },
+    Е: {
+        Енот: "raccoon.png",
+        Ежевика: "blackberry.png",
+        Ель: "fir_tree.png",
+        Ехидна: "echidna.png",
+        Еда: "food.png"
+    },
+    Ё: {
+        Ёж: "hedgehog.png",
+        Ёлка: "christmas_tree.png",
+        Ёрш: "ruff.png",
+        Ёжик: "little_hedgehog.png",
+        "Ёлочная игрушка": "christmas_ornament.png"
+    },
+    Ж: {
+        Жираф: "giraffe.png",
+        Жук: "beetle.png",
+        Жаба: "toad.png",
+        Журавль: "crane.png",
+        Жёлудь: "acorn.png"
+    },
+    З: {
+        Заяц: "hare.png",
+        Зебра: "zebra.png",
+        Зонт: "umbrella.png",
+        Звезда: "star.png",
+        Земляника: "wild_strawberry.png"
+    },
+    И: {
+        Игрушка: "toy.png",
+        Индюк: "turkey.png",
+        Игла: "needle.png",
+        Ирис: "iris.png",
+        Индейка: "female_turkey.png"
+    },
+    Й: {
+        Йогурт: "yogurt.png",
+        Йод: "iodine.png",
+        Йети: "yeti.png",
+        Йорк: "yorkie.png",
+        Йога: "yoga.png"
+    },
+    К: {
+        Корабль: "ship.png",
+        Кот: "cat.png",
+        Карандаш: "pencil.png",
+        Кукла: "doll.png",
+        Крокодил: "crocodile.png"
+    },
+    Л: {
+        Лиса: "fox.png",
+        Лев: "lion.png",
+        Луна: "moon.png",
+        Лимон: "lemon.png",
+        Лодка: "boat.png"
+    },
+    М: {
+        Мяч: "ball.png",
+        Медведь: "bear.png",
+        Машина: "car.png",
+        Молоко: "milk.png",
+        Море: "sea.png"
+    },
+    Н: {
+        Носорог: "rhinoceros.png",
+        Носки: "socks.png",
+        Небо: "sky.png",
+        Нитки: "thread.png",
+        Нора: "burrow.png"
+    },
+    О: {
+        Облако: "cloud.png",
+        Окно: "window.png",
+        Остров: "island.png",
+        Одуванчик: "dandelion.png",
+        Осьминог: "octopus.png"
+    },
+    П: {
+        Птица: "bird.png",
+        Панда: "panda.png",
+        Пирог: "pie.png",
+        Пальма: "palm_tree.png",
+        Паровоз: "steam_locomotive.png"
+    },
+    Р: {
+        Радуга: "rainbow.png",
+        Рыба: "fish.png",
+        Ракета: "rocket.png",
+        Робот: "robot.png",
+        Ромашка: "daisy.png"
+    },
+    С: {
+        Солнце: "sun.png",
+        Собака: "dog.png",
+        Слон: "elephant.png",
+        Сыр: "cheese.png",
+        Самолёт: "airplane.png"
+    },
+    Т: {
+        Тигр: "tiger.png",
+        Торт: "cake.png",
+        Туча: "cloud_dark.png",
+        Трактор: "tractor.png",
+        Телефон: "telephone.png"
+    },
+    У: {
+        Утка: "duck.png",
+        Улитка: "snail.png",
+        Улыбка: "smile.png",
+        Улица: "street.png",
+        Утюг: "iron.png"
+    },
+    Ф: {
+        Фонарик: "flashlight.png",
+        Фламинго: "flamingo.png",
+        Фея: "fairy.png",
+        Флаг: "flag.png",
+        Фрукты: "fruits.png"
+    },
+    Х: {
+        Хлеб: "bread.png",
+        Хомяк: "hamster.png",
+        Хвост: "tail.png",
+        Холодильник: "refrigerator.png",
+        Художник: "artist.png"
+    },
+    Ц: {
+        Цыплёнок: "chick.png",
+        Цветок: "flower.png",
+        Цирк: "circus.png",
+        Цапля: "heron.png",
+        Цифра: "number.png"
+    },
+    Ч: {
+        Черепаха: "turtle.png",
+        Часы: "clock.png",
+        Чайник: "teapot.png",
+        Чемодан: "suitcase.png",
+        Чашка: "cup.png"
+    },
+    Ш: {
+        Шар: "balloon.png",
+        Шуба: "fur_coat.png",
+        Шоколад: "chocolate.png",
+        Шишка: "pinecone.png",
+        Шмель: "bumblebee.png"
+    },
+    Щ: {
+        Щука: "pike.png",
+        Щенок: "puppy.png",
+        Щётка: "brush.png",
+        Щавель: "sorrel.png",
+        Щит: "shield.png"
+    },
+    Ъ: {
+        Подъезд: "entrance.png",
+        Объём: "volume.png",
+        Съёмка: "filming.png",
+        Объявление: "notice.png",
+        Съезд: "congress.png"
+    },
+    Ы: {
+        Сыр: "cheese.png",
+        Мышь: "mouse.png",
+        Рыба: "fish.png",
+        Дым: "smoke.png",
+        Тыква: "Тыква.png"
+    },
+    Ь: {
+        Семья: "family.png",
+        Конь: "horse.png",
+        Пальто: "coat.png",
+        Мальчик: "boy.png",
+        Медведь: "bear.png"
+    },
+    Э: {
+        Эскимо: "popsicle.png",
+        Экран: "screen.png",
+        Экскаватор: "excavator.png",
+        Эхо: "echo.png",
+        Этажерка: "shelf.png"
+    },
+    Ю: {
+        Юла: "spinning_top.png",
+        Юбка: "skirt.png",
+        Юрта: "yurt.png",
+        Юнга: "cabin_boy.png",
+        Юмор: "humor.png"
+    },
+    Я: {
+        Яблоко: "apple.png",
+        Ягода: "berry.png",
+        Якорь: "anchor.png",
+        Ящерица: "lizard.png",
+        Яйцо: "egg.png"
+    }
+};
+
 function getLetterFolderName(letter) {
     const normalizedLetter = letter.toLowerCase();
 
@@ -18,16 +238,18 @@ function getLetterFolderName(letter) {
 }
 
 function createWord(letter, text) {
-    const imageName = text
-        .toLowerCase()
-        .split("")
-        .map((character) => wordTransliteration[character] ?? character)
-        .join("")
-        .replace(/\s+/g, "-");
+    const customImages = customWordImages[letter];
+    const imageName = customImages?.[text]
+        ?? `${text
+            .toLowerCase()
+            .split("")
+            .map((character) => wordTransliteration[character] ?? character)
+            .join("")
+            .replace(/\s+/g, "-")}.png`;
 
     return {
         text,
-        image: `assets/images/letters/${getLetterFolderName(letter)}/${imageName}.png`
+        image: `assets/images/letters/${getLetterFolderName(letter)}/${imageName}`
     };
 }
 
@@ -82,7 +304,7 @@ const targetLetter = document.getElementById("targetLetter");
 const balloons = document.getElementById("balloons");
 const screens = document.querySelectorAll(".screen");
 const balloonColors = ["#ff6b6b", "#4dabf7", "#51cf66", "#ff922b", "#9775fa"];
-const celebrationPhrases = ["Молодец!"];
+const celebrationPhrases = ["Молодец!", "Здорово!", "Отлично!", "Супер!", "Умница!"];
 const balloonSize = 90;
 let correctBalloonsLeft = 0;
 let nextRoundTimeout = null;
