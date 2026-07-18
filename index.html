@@ -89,20 +89,31 @@
 
         </div>
 
-        <div class="bigLetter" id="bigLetter">
-            А
+        <div class="letterScreenLayout">
+            <div class="letterContent">
+                <div class="bigLetter" id="bigLetter">
+                    А
+                </div>
+
+                <div class="letterImage" id="letterImage">
+                </div>
+
+                <div id="wordsBlock" class="wordsBlock">
+                </div>
+            </div>
+
+            <aside class="gameChoicePanel" aria-label="Выбор мини-игры">
+                <button id="playBalloonsGameButton" class="gameChoiceButton" type="button">
+                    Шарики
+                </button>
+                <button id="playGameButton" class="gameChoiceButton" type="button">
+                    Найди два слова
+                </button>
+                <button id="playConnectGameButton" class="gameChoiceButton" type="button">
+                    Соедини линией
+                </button>
+            </aside>
         </div>
-
-        <div class="letterImage" id="letterImage">
-        </div>
-
-        <div id="wordsBlock" class="wordsBlock">
-
-        </div>
-
-        <button id="playGameButton" class="playButton">
-            Играть
-        </button>
 
     </section>
 
@@ -120,7 +131,7 @@
             </button>
 
             <h2 id="gameScreenTitle" class="gameScreenTitle">
-                <span id="gameScreenTitleText">Найди предметы на букву</span>
+                <span id="gameScreenTitleText">Найди два слова на букву</span>
                 <span id="gameScreenTitleLetter" class="gameScreenTitleLetter">А</span>
             </h2>
 
@@ -128,11 +139,18 @@
 
         <div class="gameTitle">
 
-            Найди 2 предмета
+            Найди два слова
 
         </div>
 
-        <div id="findObjectCards" class="findObjectCards" aria-label="Карточки предметов"></div>
+        <div id="findObjectCards" class="findObjectCards" aria-label="Карточки слов"></div>
+
+        <div id="connectLineBoard" class="connectLineBoard hidden" aria-label="Соедини букву с двумя подходящими изображениями">
+            <div id="connectLeftImages" class="connectColumn connectImages connectLeftImages"></div>
+            <svg id="connectLines" class="connectLines" aria-hidden="true"></svg>
+            <button id="connectCenterLetter" class="connectCenterLetter" type="button" aria-label="Выбранная буква"></button>
+            <div id="connectRightImages" class="connectColumn connectImages connectRightImages"></div>
+        </div>
 
         <div id="findObjectCelebration" class="findObjectCelebration hidden" aria-live="polite"></div>
 

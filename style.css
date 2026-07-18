@@ -509,11 +509,72 @@ body {
 
 #letterScreen {
     min-height: 100vh;
+    max-height: 100svh;
     padding: clamp(12px, 2.5vw, 24px);
-    overflow: hidden;
+    overflow-y: auto;
     background:
         radial-gradient(circle at 12% 12%, rgba(255, 255, 255, .7), transparent 19%),
         radial-gradient(circle at 88% 22%, rgba(255, 233, 180, .48), transparent 23%);
+}
+
+.letterScreenLayout {
+    display: grid;
+    grid-template-columns: minmax(0, 760px) minmax(210px, 260px);
+    align-items: start;
+    justify-content: center;
+    gap: clamp(18px, 3vw, 34px);
+    width: min(1060px, 100%);
+    margin: 0 auto;
+}
+
+.letterContent {
+    min-width: 0;
+}
+
+.letterContent .letterImage {
+    width: 100%;
+}
+
+.gameChoicePanel {
+    position: sticky;
+    top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    padding: 16px;
+    border: 4px solid rgba(255, 255, 255, .72);
+    border-radius: 26px;
+    background: rgba(255, 255, 255, .5);
+    box-shadow: 0 14px 28px rgba(69, 101, 152, .16);
+}
+
+.gameChoiceButton {
+    width: 100%;
+    min-height: 66px;
+    padding: 12px 14px;
+    border: 3px solid rgba(255, 255, 255, .86);
+    border-radius: 18px;
+    background: linear-gradient(135deg, #6bbcff, #5b8df7);
+    color: white;
+    font-size: clamp(17px, 2vw, 21px);
+    font-weight: 800;
+    line-height: 1.15;
+    cursor: pointer;
+    box-shadow: 0 8px 16px rgba(60, 121, 208, .22);
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.gameChoiceButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 11px 20px rgba(60, 121, 208, .3);
+}
+
+.gameChoiceButton.is-active {
+    border-color: #ffcf33;
+    background: linear-gradient(135deg, #9b7bea, #7b82ed);
+    box-shadow: 0 0 0 4px rgba(255, 207, 51, .24), 0 11px 22px rgba(91, 92, 190, .28);
+    transform: scale(1.025);
 }
 
 #letterScreen .header {
@@ -548,6 +609,11 @@ body {
 #letterScreen .playButton {
     display: block;
     margin: 16px auto 0;
+}
+
+#letterScreen .connectGameButton {
+    margin-top: 10px;
+    background: linear-gradient(135deg, #9b7bea, #7b82ed);
 }
 
 #letterScreen .backButton:hover,
@@ -614,6 +680,11 @@ body {
     font-weight: 700;
 }
 
+#gameScreen {
+    max-height: 100svh;
+    overflow-y: auto;
+}
+
 .gameScreenTitle {
     display: flex;
     flex-wrap: wrap;
@@ -648,6 +719,136 @@ body {
     width: min(720px, 100%);
     margin: 0 auto;
     align-content: start;
+}
+
+.findObjectCards.hidden,
+.connectLineBoard.hidden {
+    display: none;
+}
+
+.connectLineBoard {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(76px, 1fr) clamp(72px, 12vw, 120px) minmax(76px, 1fr);
+    gap: clamp(20px, 5vw, 54px);
+    align-items: center;
+    width: min(760px, 100%);
+    margin: 0 auto;
+    padding: 4px clamp(4px, 2vw, 16px);
+    touch-action: none;
+}
+
+.connectColumn {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-rows: repeat(4, minmax(76px, 1fr));
+    gap: clamp(8px, 1.5vh, 14px);
+}
+
+.connectLeftImages {
+    grid-column: 1;
+}
+
+.connectRightImages {
+    grid-column: 3;
+}
+
+.connectCenterLetter {
+    position: relative;
+    z-index: 3;
+    grid-column: 2;
+    grid-row: 1;
+    display: grid;
+    place-items: center;
+    width: clamp(72px, 12vw, 120px);
+    aspect-ratio: 1;
+    border: 5px solid rgba(255, 255, 255, .9);
+    border-radius: 38%;
+    background: linear-gradient(145deg, #fff9fd, #f0eaff);
+    color: #f56f83;
+    font-size: clamp(58px, 10vw, 92px);
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 12px 24px rgba(111, 88, 167, .22);
+    cursor: grab;
+    touch-action: none;
+    transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.connectLines {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.connectLine {
+    stroke: #7b82ed;
+    stroke-width: 8;
+    stroke-linecap: round;
+    filter: drop-shadow(0 3px 3px rgba(69, 101, 152, .22));
+}
+
+.connectLine.is-drawing {
+    stroke: #ffb703;
+    stroke-dasharray: 12 8;
+}
+
+.connectLine.is-wrong {
+    animation: connectLineDisappear 280ms ease-out forwards;
+}
+
+.connectLetterCard,
+.connectImageCard {
+    min-height: 76px;
+    border: 3px solid rgba(255, 255, 255, .88);
+    border-radius: 22px;
+    background: linear-gradient(145deg, #ffffff, #eef7ff);
+    box-shadow: 0 8px 18px rgba(69, 101, 152, .16);
+    cursor: pointer;
+    touch-action: none;
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.connectLetterCard {
+    color: #f56f83;
+    font-size: clamp(38px, 7vw, 58px);
+    font-weight: 900;
+}
+
+.connectImageCard {
+    padding: 6px;
+}
+
+.connectImageCard img {
+    display: block;
+    width: 100%;
+    height: clamp(64px, 12vh, 104px);
+    object-fit: contain;
+    pointer-events: none;
+}
+
+.connectCenterLetter.is-connecting {
+    transform: scale(1.06);
+    border-color: #ffb703;
+    cursor: grabbing;
+}
+
+.connectImageCard.is-matched {
+    border-color: #51cf66;
+    box-shadow: 0 0 0 4px rgba(81, 207, 102, .2), 0 8px 18px rgba(47, 179, 95, .18);
+}
+
+@keyframes connectLineDisappear {
+    to {
+        opacity: 0;
+        stroke: #ff6b6b;
+        stroke-dashoffset: 24;
+    }
 }
 
 .findObjectCard {
@@ -685,6 +886,36 @@ body {
     font-size: clamp(16px, 2.8vw, 22px);
     font-weight: 800;
     line-height: 1.15;
+}
+
+.findObjectCard.specialWordCard,
+.connectImageCard.specialWordCard {
+    background: linear-gradient(145deg, #ffffff, #f7f0ff);
+    color: #4f5f8c;
+}
+
+.findObjectCard.specialWordCard {
+    min-height: clamp(130px, 20svh, 190px);
+}
+
+.findObjectCard.specialWordCard .cardLabel,
+.connectWordLabel {
+    font-size: clamp(22px, 4vw, 34px);
+    font-weight: 800;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+}
+
+.connectWordLabel {
+    display: block;
+    text-align: center;
+}
+
+.specialWordHighlight {
+    color: #f04f6c;
+    font-size: 1.12em;
+    font-weight: 900;
+    text-shadow: 0 2px 0 rgba(255, 255, 255, .9);
 }
 
 .findObjectCard.is-correct {
@@ -846,6 +1077,18 @@ body {
     }
 }
 
+@media (max-width: 900px) {
+    .letterScreenLayout {
+        grid-template-columns: minmax(0, 760px);
+    }
+
+    .gameChoicePanel {
+        position: static;
+        width: min(760px, 100%);
+        margin: 0 auto 20px;
+    }
+}
+
 @media (max-width: 520px) {
     .findObjectCard {
         min-height: 190px;
@@ -855,5 +1098,44 @@ body {
     .findObjectCard img {
         width: 112px;
         height: 112px;
+    }
+
+    .connectLineBoard {
+        grid-template-columns: minmax(68px, 1fr) clamp(62px, 18vw, 82px) minmax(68px, 1fr);
+        gap: clamp(8px, 3vw, 18px);
+    }
+
+    .connectColumn {
+        grid-template-rows: repeat(4, minmax(68px, 1fr));
+        gap: 7px;
+    }
+
+    .connectLetterCard,
+    .connectImageCard {
+        min-height: 68px;
+        border-radius: 18px;
+    }
+
+    .connectImageCard img {
+        height: clamp(56px, 10vh, 82px);
+    }
+
+    .connectLine {
+        stroke-width: 6;
+    }
+
+    .connectCenterLetter {
+        width: clamp(62px, 18vw, 82px);
+        border-width: 4px;
+        font-size: clamp(48px, 15vw, 66px);
+    }
+
+    .gameChoicePanel {
+        padding: 12px;
+        border-radius: 22px;
+    }
+
+    .gameChoiceButton {
+        min-height: 58px;
     }
 }
