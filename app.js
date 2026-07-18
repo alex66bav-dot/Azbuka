@@ -302,15 +302,35 @@ const letterImage = document.getElementById("letterImage");
 const wordsBlock = document.getElementById("wordsBlock");
 const targetLetter = document.getElementById("targetLetter");
 const balloons = document.getElementById("balloons");
+const gameScreenTitle = document.getElementById("gameScreenTitle");
+const gameScreenTitleText = document.getElementById("gameScreenTitleText");
+const gameScreenTitleLetter = document.getElementById("gameScreenTitleLetter");
+const findObjectCards = document.getElementById("findObjectCards");
+const backToLettersButton = document.getElementById("backToLettersButton");
+const progressText = document.getElementById("progressText");
+const progressBarFill = document.getElementById("progressBarFill");
+const settingsButton = document.getElementById("settingsButton");
+const settingsOverlay = document.getElementById("settingsOverlay");
+const showResetConfirmButton = document.getElementById("showResetConfirmButton");
+const resetConfirmBlock = document.getElementById("resetConfirmBlock");
+const cancelResetButton = document.getElementById("cancelResetButton");
+const confirmResetButton = document.getElementById("confirmResetButton");
+const closeSettingsButton = document.getElementById("closeSettingsButton");
+const repeatRoundButton = document.getElementById("repeatRoundButton");
 const screens = document.querySelectorAll(".screen");
 const balloonColors = ["#ff6b6b", "#4dabf7", "#51cf66", "#ff922b", "#9775fa"];
 const celebrationPhrases = ["Молодец!", "Здорово!", "Отлично!", "Супер!", "Умница!"];
 const balloonSize = 90;
+const totalLettersCount = alphabet.length;
 let correctBalloonsLeft = 0;
+let lastCelebrationPhrase = "";
 let nextRoundTimeout = null;
 let animationFrameId = null;
 let lastAnimationTime = null;
 let movingBalloons = [];
+let findObjectRoundItems = [];
+let findObjectCorrectFound = 0;
+let findObjectRoundCompleted = false;
 let currentImagePath = null;
 let imageRequestId = 0;
 let imageRetryTimeout = null;
@@ -321,8 +341,12 @@ const imageRequests = new Map();
 let letterSelectionTimeout = null;
 const letterSelectionDelay = 150;
 const completedLettersStorageKey = "azbukaCompletedLetters";
+const miniGameProgressStorageKey = "azbukaMiniGameProgress";
+const miniGameIds = ["game1", "game2", "game3", "game4", "game5"];
 const completedLetters = new Set(loadCompletedLetters());
+const miniGameProgress = loadMiniGameProgress();
 const letterCards = new Map();
+const letterProgressRings = new Map();
 
 function loadCompletedLetters() {
     try {
@@ -336,18 +360,210 @@ function loadCompletedLetters() {
     }
 }
 
+function normalizeCompletedGames(completedGames) {
+    if (!Array.isArray(completedGames)) {
+        return [];
+    }
+
+    return [...new Set(completedGames.filter((gameId) => miniGameIds.includes(gameId)))];
+}
+
+function migrateLegacyMiniGameValue(letter, value) {
+    if (typeof value === "number") {
+        if (value >= 5) {
+            return [...miniGameIds];
+        }
+
+        if (value >= 2) {
+            return ["game2"];
+        }
+
+        if (value >= 1) {
+            return ["game1"];
+        }
+
+        return [];
+    }
+
+    if (value && typeof value === "object") {
+        return normalizeCompletedGames(value.completedGames ?? []);
+    }
+
+    return [];
+}
+
+function loadMiniGameProgress() {
+    const fallbackProgress = {};
+
+    alphabet.forEach((letterData) => {
+        fallbackProgress[letterData.letter] = { completedGames: [] };
+    });
+
+    try {
+        const storedProgress = JSON.parse(localStorage.getItem(miniGameProgressStorageKey) ?? "{}");
+
+        if (!storedProgress || typeof storedProgress !== "object" || Array.isArray(storedProgress)) {
+            return fallbackProgress;
+        }
+
+        alphabet.forEach((letterData) => {
+            const rawValue = storedProgress[letterData.letter];
+            fallbackProgress[letterData.letter] = {
+                completedGames: migrateLegacyMiniGameValue(letterData.letter, rawValue)
+            };
+        });
+    } catch {
+        return fallbackProgress;
+    }
+
+    const legacyCompletedLetters = loadCompletedLetters();
+
+    legacyCompletedLetters.forEach((letter) => {
+        if (!fallbackProgress[letter]) {
+            return;
+        }
+
+        fallbackProgress[letter] = {
+            completedGames: [...miniGameIds]
+        };
+    });
+
+    return fallbackProgress;
+}
+
+function updateProgressUI() {
+    const completedCount = alphabet.filter((letterData) => getCompletedGames(letterData.letter).length === miniGameIds.length).length;
+    const progressPercent = Math.round((completedCount / totalLettersCount) * 100);
+
+    if (progressText) {
+        progressText.textContent = `${completedCount} из ${totalLettersCount}`;
+    }
+
+    if (progressBarFill) {
+        progressBarFill.style.width = `${progressPercent}%`;
+    }
+}
+
+function saveMiniGameProgress() {
+    try {
+        localStorage.setItem(miniGameProgressStorageKey, JSON.stringify(miniGameProgress));
+    } catch {
+        // Progress remains available until the page is reloaded.
+    }
+}
+
+function getCompletedGames(letter) {
+    return normalizeCompletedGames(miniGameProgress[letter]?.completedGames ?? []);
+}
+
+function isLetterFullyCompleted(letter) {
+    return getCompletedGames(letter).length === miniGameIds.length;
+}
+
+function setCompletedGames(letter, completedGames) {
+    miniGameProgress[letter] = {
+        completedGames: normalizeCompletedGames(completedGames)
+    };
+
+    saveMiniGameProgress();
+}
+
+function recordMiniGameProgress(letter, gameId) {
+    const nextCompletedGames = new Set(getCompletedGames(letter));
+
+    if (nextCompletedGames.has(gameId)) {
+        return;
+    }
+
+    nextCompletedGames.add(gameId);
+    setCompletedGames(letter, [...nextCompletedGames]);
+    updateLetterCardProgress(letter);
+}
+
+function createProgressRingBackground(letter) {
+    const completedGames = new Set(getCompletedGames(letter));
+
+    if (!letterProgressRings.has(letter)) {
+        return;
+    }
+
+    const progressRing = letterProgressRings.get(letter);
+    const segments = progressRing.querySelectorAll(".letterProgressSegment");
+
+    segments.forEach((segment) => {
+        const gameId = segment.dataset.gameId;
+        const isComplete = completedGames.has(gameId);
+        segment.classList.toggle("is-complete", isComplete);
+    });
+}
+
 function updateLetterCardProgress(letter) {
-    letterCards.get(letter)?.classList.toggle("is-completed", completedLetters.has(letter));
+    const card = letterCards.get(letter);
+    const progressRing = letterProgressRings.get(letter);
+
+    if (progressRing) {
+        createProgressRingBackground(letter);
+    }
+
+    card?.classList.toggle("is-completed", isLetterFullyCompleted(letter));
+    updateProgressUI();
 }
 
 function markLetterCompleted(letter) {
-    completedLetters.add(letter);
-    updateLetterCardProgress(letter);
+    if (isLetterFullyCompleted(letter)) {
+        return;
+    }
 
+    setCompletedGames(letter, miniGameIds);
+    updateLetterCardProgress(letter);
+}
+
+function recordMiniGameCompletion(letter) {
+    recordMiniGameProgress(letter, "game1");
+}
+
+function recordFindObjectsCompletion(letter) {
+    recordMiniGameProgress(letter, "game2");
+}
+
+function resetCompletedLettersProgress() {
     try {
-        localStorage.setItem(completedLettersStorageKey, JSON.stringify([...completedLetters]));
+        localStorage.removeItem(completedLettersStorageKey);
+        localStorage.removeItem(miniGameProgressStorageKey);
     } catch {
-        // Progress still remains available until the page is reloaded.
+        // Ignore storage access issues and keep the UI reset in sync.
+    }
+
+    completedLetters.clear();
+    alphabet.forEach((letterData) => {
+        miniGameProgress[letterData.letter] = { completedGames: [] };
+        updateLetterCardProgress(letterData.letter);
+    });
+}
+
+function openSettingsModal() {
+    if (settingsOverlay) {
+        settingsOverlay.classList.remove("hidden");
+    }
+
+    if (resetConfirmBlock) {
+        resetConfirmBlock.classList.add("hidden");
+    }
+}
+
+function closeSettingsModal() {
+    if (settingsOverlay) {
+        settingsOverlay.classList.add("hidden");
+    }
+
+    if (resetConfirmBlock) {
+        resetConfirmBlock.classList.add("hidden");
+    }
+}
+
+function showResetProgressConfirmation() {
+    if (resetConfirmBlock) {
+        resetConfirmBlock.classList.remove("hidden");
     }
 }
 
@@ -484,11 +700,210 @@ function showLetter(letterData) {
     showScreen("letterScreen");
 }
 
-function getRandomWrongLetter() {
-    const wrongLetters = alphabet.filter((letterData) => letterData.letter !== selectedLetter.letter);
-    const randomIndex = Math.floor(Math.random() * wrongLetters.length);
+function buildFindObjectRound(letterData) {
+    const correctWords = shuffleArray(letterData.words).slice(0, 2);
+    const otherWords = shuffleArray(alphabet
+        .filter((candidate) => candidate.letter !== letterData.letter)
+        .flatMap((candidate) => candidate.words)
+        .map((word) => ({ ...word }))
+    ).slice(0, 4);
 
-    return wrongLetters[randomIndex].letter;
+    return shuffleArray([...correctWords, ...otherWords]);
+}
+
+function isCorrectFindObjectWord(word, letterData) {
+    const selectedLetter = letterData.letter.toLowerCase();
+    const wordText = word.text.toLowerCase();
+
+    if (selectedLetter === "ъ" || selectedLetter === "ь" || selectedLetter === "ы") {
+        return wordText.includes(selectedLetter);
+    }
+
+    return wordText.startsWith(selectedLetter);
+}
+
+function showFindObjectRound(letterData) {
+    selectedLetter = letterData;
+    findObjectRoundItems = buildFindObjectRound(letterData);
+    findObjectCorrectFound = 0;
+    findObjectRoundCompleted = false;
+
+    if (gameScreenTitleText && gameScreenTitleLetter) {
+        if (letterData.letter === "Ъ") {
+            gameScreenTitleText.textContent = "Найди слова, в которых есть твёрдый знак";
+            gameScreenTitleLetter.textContent = "Ъ";
+        } else if (letterData.letter === "Ь") {
+            gameScreenTitleText.textContent = "Найди слова, в которых есть мягкий знак";
+            gameScreenTitleLetter.textContent = "Ь";
+        } else if (letterData.letter === "Ы") {
+            gameScreenTitleText.textContent = "Найди слова, в которых есть буква Ы";
+            gameScreenTitleLetter.textContent = "Ы";
+        } else {
+            gameScreenTitleText.textContent = "Найди предметы на букву";
+            gameScreenTitleLetter.textContent = letterData.letter;
+        }
+    }
+
+    if (findObjectCards) {
+        findObjectCards.innerHTML = "";
+    }
+
+    if (repeatRoundButton) {
+        repeatRoundButton.classList.remove("hidden");
+    }
+
+    if (backToLettersButton) {
+        backToLettersButton.classList.add("hidden");
+    }
+
+    if (balloons) {
+        balloons.classList.add("hidden");
+        balloons.innerHTML = "";
+    }
+
+    const celebrationOverlay = document.getElementById("findObjectCelebration");
+
+    if (celebrationOverlay) {
+        celebrationOverlay.classList.add("hidden");
+        celebrationOverlay.textContent = "";
+    }
+
+    findObjectRoundItems.forEach((item) => {
+        const card = document.createElement("button");
+        const image = document.createElement("img");
+        const label = document.createElement("div");
+
+        card.type = "button";
+        card.className = "findObjectCard";
+        card.setAttribute("aria-label", item.text);
+        image.src = item.image;
+        image.alt = item.text;
+        label.className = "cardLabel";
+        label.textContent = item.text;
+        card.appendChild(image);
+        card.appendChild(label);
+        card.addEventListener("click", () => handleFindObjectCardClick(card, item));
+        findObjectCards?.appendChild(card);
+    });
+
+    showScreen("gameScreen");
+}
+
+function handleFindObjectCardClick(card, item) {
+    if (findObjectRoundCompleted || card.classList.contains("is-disabled")) {
+        return;
+    }
+
+    const isCorrect = isCorrectFindObjectWord(item, selectedLetter);
+
+    if (isCorrect) {
+        card.classList.add("is-correct", "is-disabled");
+        card.disabled = true;
+        findObjectCorrectFound += 1;
+
+        if (findObjectCorrectFound >= 2 && !findObjectRoundCompleted) {
+            findObjectRoundCompleted = true;
+            completeFindObjectGame();
+        }
+
+        return;
+    }
+
+    card.classList.add("is-wrong");
+    setTimeout(() => card.classList.remove("is-wrong"), 620);
+}
+
+function completeFindObjectGame() {
+    if (findObjectRoundCompleted && selectedLetter) {
+        recordMiniGameProgress(selectedLetter.letter, "game2");
+    }
+
+    if (findObjectCards) {
+        findObjectCards.querySelectorAll(".findObjectCard").forEach((gameCard) => {
+            gameCard.classList.add("is-disabled");
+            gameCard.disabled = true;
+        });
+    }
+
+    if (repeatRoundButton) {
+        repeatRoundButton.classList.add("hidden");
+    }
+
+    const phrase = celebrationPhrases[Math.floor(Math.random() * celebrationPhrases.length)];
+    showCelebrationPhrase(phrase);
+
+    setTimeout(() => {
+        if (backToLettersButton) {
+            backToLettersButton.classList.remove("hidden");
+        }
+    }, 1650);
+}
+
+function launchConfetti() {
+    const confettiContainer = document.getElementById("confetti");
+
+    if (!confettiContainer) {
+        return;
+    }
+
+    const colors = ["#ff6b6b", "#ffb703", "#51cf66", "#4dabf7", "#9775fa", "#f56f83"];
+    const launchPoints = [16, 34, 50, 66, 84];
+
+    confettiContainer.innerHTML = "";
+
+    for (let index = 0; index < 48; index += 1) {
+        const piece = document.createElement("span");
+        const launchPoint = launchPoints[index % launchPoints.length];
+
+        piece.className = "confettiPiece";
+        piece.style.left = `${launchPoint}%`;
+        piece.style.top = `${Math.random() * 24}%`;
+        piece.style.background = colors[index % colors.length];
+        piece.style.animation = `confettiFall ${1400 + Math.random() * 600}ms ease-out forwards`;
+        piece.style.animationDelay = `${index * 18}ms`;
+        piece.addEventListener("animationend", () => piece.remove());
+        confettiContainer.appendChild(piece);
+    }
+
+    setTimeout(() => {
+        confettiContainer.innerHTML = "";
+    }, 2200);
+}
+
+function showCelebrationPhrase(phrase) {
+    const celebrationOverlay = document.getElementById("findObjectCelebration");
+
+    if (!celebrationOverlay) {
+        return;
+    }
+
+    celebrationOverlay.textContent = phrase;
+    celebrationOverlay.classList.remove("hidden");
+    celebrationOverlay.style.animation = "none";
+    void celebrationOverlay.offsetWidth;
+    celebrationOverlay.style.animation = "findObjectCelebrationReveal 1650ms ease-in-out forwards";
+
+    launchConfetti();
+}
+
+function shuffleArray(items) {
+    const shuffled = [...items];
+
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+
+        [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+    }
+
+    return shuffled;
+}
+
+function getRandomWrongLetters(count) {
+    const wrongLetters = alphabet
+        .filter((letterData) => letterData.letter !== selectedLetter.letter)
+        .map((letterData) => letterData.letter);
+
+    return shuffleArray(wrongLetters).slice(0, count);
 }
 
 function stopBalloonAnimation() {
@@ -577,14 +992,18 @@ function createExplosion(balloon) {
 }
 
 function finishRound() {
-    markLetterCompleted(selectedLetter.letter);
+    recordMiniGameCompletion(selectedLetter.letter);
     stopBalloonAnimation();
     balloons.innerHTML = "";
 
     const celebration = document.createElement("div");
-    const phraseIndex = Math.floor(Math.random() * celebrationPhrases.length);
+    const availablePhrases = celebrationPhrases.filter((phrase) => phrase !== lastCelebrationPhrase);
+    const phrase = availablePhrases.length > 0
+        ? availablePhrases[Math.floor(Math.random() * availablePhrases.length)]
+        : celebrationPhrases[0];
 
-    celebration.textContent = celebrationPhrases[phraseIndex];
+    lastCelebrationPhrase = phrase;
+    celebration.textContent = phrase;
     celebration.style.position = "fixed";
     celebration.style.top = "50%";
     celebration.style.left = "50%";
@@ -668,12 +1087,12 @@ function createGameRound() {
     targetLetter.textContent = selectedLetter.letter;
     correctBalloonsLeft = 3;
 
-    const roundLetters = [
+    const roundLetters = shuffleArray([
         selectedLetter.letter,
         selectedLetter.letter,
         selectedLetter.letter,
-        ...Array.from({ length: 7 }, getRandomWrongLetter)
-    ].sort(() => Math.random() - 0.5);
+        ...getRandomWrongLetters(7)
+    ]);
 
     const maxLeft = Math.max(0, balloons.clientWidth - balloonSize);
     const maxTop = Math.max(0, balloons.clientHeight - balloonSize);
@@ -687,7 +1106,8 @@ function createGameRound() {
         const left = Math.random() * maxLeft;
         const top = Math.random() * maxTop;
         const direction = Math.random() * Math.PI * 2;
-        const speed = 15 + Math.random() * 15;
+        const speed = 10 + Math.random() * 18;
+        const drift = 0.4 + Math.random() * 0.8;
 
         balloon.style.left = `${left}px`;
         balloon.style.top = `${top}px`;
@@ -697,8 +1117,8 @@ function createGameRound() {
             element: balloon,
             left,
             top,
-            speedX: Math.cos(direction) * speed,
-            speedY: Math.sin(direction) * speed
+            speedX: Math.cos(direction) * speed * drift,
+            speedY: Math.sin(direction) * speed * (0.7 + Math.random() * 0.6)
         });
     });
 
@@ -706,11 +1126,28 @@ function createGameRound() {
 }
 
 alphabet.forEach((letterData) => {
+    const wrapper = document.createElement("div");
+    const ring = document.createElement("div");
     const card = document.createElement("div");
 
+    wrapper.className = "letterCardWrapper";
+    ring.className = "letterProgressRing";
     card.className = "letterCard";
     card.textContent = letterData.letter;
+
+    miniGameIds.forEach((gameId, index) => {
+        const segment = document.createElement("div");
+
+        segment.className = "letterProgressSegment";
+        segment.dataset.gameId = gameId;
+        segment.style.setProperty("--segment-start", `${index * 72}deg`);
+        ring.appendChild(segment);
+    });
+
+    wrapper.appendChild(ring);
+    wrapper.appendChild(card);
     letterCards.set(letterData.letter, card);
+    letterProgressRings.set(letterData.letter, ring);
     updateLetterCardProgress(letterData.letter);
     card.addEventListener("click", () => {
         if (letterSelectionTimeout !== null) {
@@ -722,8 +1159,10 @@ alphabet.forEach((letterData) => {
             showLetter(letterData);
         }, letterSelectionDelay);
     });
-    lettersGrid.appendChild(card);
+    lettersGrid.appendChild(wrapper);
 });
+
+updateProgressUI();
 
 document.getElementById("startButton").addEventListener("click", () => {
     showScreen("lettersScreen");
@@ -737,10 +1176,60 @@ document.getElementById("backLettersButton").addEventListener("click", () => {
     showScreen("lettersScreen");
 });
 
+if (settingsButton) {
+    settingsButton.addEventListener("click", () => {
+        openSettingsModal();
+    });
+}
+
+if (closeSettingsButton) {
+    closeSettingsButton.addEventListener("click", () => {
+        closeSettingsModal();
+    });
+}
+
+if (settingsOverlay) {
+    settingsOverlay.addEventListener("click", (event) => {
+        if (event.target === settingsOverlay) {
+            closeSettingsModal();
+        }
+    });
+}
+
+if (showResetConfirmButton) {
+    showResetConfirmButton.addEventListener("click", () => {
+        showResetProgressConfirmation();
+    });
+}
+
+if (cancelResetButton) {
+    cancelResetButton.addEventListener("click", () => {
+        closeSettingsModal();
+    });
+}
+
+if (confirmResetButton) {
+    confirmResetButton.addEventListener("click", () => {
+        resetCompletedLettersProgress();
+        closeSettingsModal();
+    });
+}
+
 document.getElementById("playGameButton").addEventListener("click", () => {
-    showScreen("gameScreen");
-    createGameRound();
+    showFindObjectRound(selectedLetter);
 });
+
+if (repeatRoundButton) {
+    repeatRoundButton.addEventListener("click", () => {
+        showFindObjectRound(selectedLetter);
+    });
+}
+
+if (backToLettersButton) {
+    backToLettersButton.addEventListener("click", () => {
+        showScreen("lettersScreen");
+    });
+}
 
 document.getElementById("backLetterButton").addEventListener("click", () => {
     showScreen("letterScreen");

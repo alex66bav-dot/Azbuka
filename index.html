@@ -37,7 +37,11 @@
                 ←
             </button>
 
-            <h2>Русский алфавит</h2>
+            <h2>Выбери букву</h2>
+
+            <button id="settingsButton" class="settingsButton" type="button" aria-label="Открыть настройки">
+                ⚙
+            </button>
 
         </div>
 
@@ -46,6 +50,26 @@
         </div>
 
     </section>
+
+    <div id="settingsOverlay" class="settingsOverlay hidden">
+        <div class="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+            <h3 id="settingsTitle">Для родителей</h3>
+            <p class="settingsDescription">Управление прогрессом ребёнка.</p>
+            <button id="showResetConfirmButton" class="settingsActionButton" type="button">
+                Сбросить весь прогресс
+            </button>
+
+            <div id="resetConfirmBlock" class="resetConfirmBlock hidden">
+                <p>Сбросить весь прогресс? Все пройденные буквы снова станут непройденными</p>
+                <div class="settingsActions">
+                    <button id="cancelResetButton" class="secondaryButton" type="button">Отмена</button>
+                    <button id="confirmResetButton" class="dangerButton" type="button">Сбросить</button>
+                </div>
+            </div>
+
+            <button id="closeSettingsButton" class="closeSettingsButton" type="button">Закрыть</button>
+        </div>
+    </div>
 
 
 
@@ -95,21 +119,32 @@
                 ←
             </button>
 
-            <h2>Воздушные шарики</h2>
+            <h2 id="gameScreenTitle" class="gameScreenTitle">
+                <span id="gameScreenTitleText">Найди предметы на букву</span>
+                <span id="gameScreenTitleLetter" class="gameScreenTitleLetter">А</span>
+            </h2>
 
         </div>
 
         <div class="gameTitle">
 
-            Найди букву
-
-            <span id="targetLetter" class="targetLetter">
-                А
-            </span>
+            Найди 2 предмета
 
         </div>
 
-        <div id="balloons" class="balloons">
+        <div id="findObjectCards" class="findObjectCards" aria-label="Карточки предметов"></div>
+
+        <div id="findObjectCelebration" class="findObjectCelebration hidden" aria-live="polite"></div>
+
+        <button id="repeatRoundButton" class="repeatRoundButton" type="button">
+            Новые карточки
+        </button>
+
+        <button id="backToLettersButton" class="toLettersButton hidden" type="button">
+            К буквам
+        </button>
+
+        <div id="balloons" class="balloons hidden">
 
         </div>
 
