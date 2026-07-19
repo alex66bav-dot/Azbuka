@@ -196,7 +196,6 @@ const customWordImages = {
     },
     Ы: {
         Сыр: "cheese.png",
-        Мышь: "mouse.png",
         Рыба: "fish.png",
         Дым: "smoke.png",
         Тыква: "Тыква.png"
@@ -230,6 +229,11 @@ const customWordImages = {
         Яйцо: "egg.png"
     }
 };
+const sharedWordImagePaths = {
+    Ы: {
+        Мыло: "assets/images/letters/m/mylo.png"
+    }
+};
 
 function getLetterFolderName(letter) {
     const normalizedLetter = letter.toLowerCase();
@@ -239,6 +243,7 @@ function getLetterFolderName(letter) {
 
 function createWord(letter, text) {
     const customImages = customWordImages[letter];
+    const sharedImagePath = sharedWordImagePaths[letter]?.[text];
     const imageName = customImages?.[text]
         ?? `${text
             .toLowerCase()
@@ -249,7 +254,7 @@ function createWord(letter, text) {
 
     return {
         text,
-        image: `assets/images/letters/${getLetterFolderName(letter)}/${imageName}`
+        image: sharedImagePath ?? `assets/images/letters/${getLetterFolderName(letter)}/${imageName}`
     };
 }
 
@@ -286,7 +291,7 @@ const alphabet = [
     { letter: "Ш", words: createWords("Ш", ["Шар", "Шуба", "Шоколад", "Шишка", "Шмель"]) },
     { letter: "Щ", words: createWords("Щ", ["Щука", "Щенок", "Щётка", "Щавель", "Щит"]) },
     { letter: "Ъ", words: createWords("Ъ", ["Подъезд", "Объём", "Съёмка", "Объявление", "Съезд"]) },
-    { letter: "Ы", words: createWords("Ы", ["Сыр", "Мышь", "Рыба", "Дым", "Тыква"]) },
+    { letter: "Ы", words: createWords("Ы", ["Сыр", "Рыба", "Дым", "Тыква", "Мыло"]) },
     { letter: "Ь", words: createWords("Ь", ["Семья", "Конь", "Пальто", "Мальчик", "Медведь"]) },
     { letter: "Э", words: createWords("Э", ["Эскимо", "Экран", "Экскаватор", "Эхо", "Этажерка"]) },
     { letter: "Ю", words: createWords("Ю", ["Юла", "Юбка", "Юрта", "Юнга", "Юмор"]) },
@@ -298,6 +303,7 @@ const wordIndexes = Object.fromEntries(alphabet.map((letterData) => [letterData.
 
 const lettersGrid = document.getElementById("lettersGrid");
 const bigLetter = document.getElementById("bigLetter");
+const letterTitle = document.getElementById("letterTitle");
 const letterImage = document.getElementById("letterImage");
 const wordsBlock = document.getElementById("wordsBlock");
 const targetLetter = document.getElementById("targetLetter");
@@ -318,12 +324,24 @@ const confirmResetButton = document.getElementById("confirmResetButton");
 const closeSettingsButton = document.getElementById("closeSettingsButton");
 const repeatRoundButton = document.getElementById("repeatRoundButton");
 const playBalloonsGameButton = document.getElementById("playBalloonsGameButton");
+const playSorterGameButton = document.getElementById("playSorterGameButton");
 const playConnectGameButton = document.getElementById("playConnectGameButton");
+const playBusGameButton = document.getElementById("playBusGameButton");
 const connectLineBoard = document.getElementById("connectLineBoard");
 const connectLeftImages = document.getElementById("connectLeftImages");
 const connectRightImages = document.getElementById("connectRightImages");
 const connectCenterLetter = document.getElementById("connectCenterLetter");
 const connectLines = document.getElementById("connectLines");
+const sorterBoard = document.getElementById("sorterBoard");
+const sorterShadows = document.getElementById("sorterShadows");
+const sorterTopShadows = document.getElementById("sorterTopShadows");
+const sorterBottomShadows = document.getElementById("sorterBottomShadows");
+const sorterLetter = document.getElementById("sorterLetter");
+const busBoard = document.getElementById("busBoard");
+const busRoadSvg = document.getElementById("busRoadSvg");
+const busStartMarker = document.getElementById("busStartMarker");
+const busDestinations = document.getElementById("busDestinations");
+const busVehicle = document.getElementById("busVehicle");
 const gameChoiceButtons = document.querySelectorAll(".gameChoiceButton");
 const screens = document.querySelectorAll(".screen");
 const balloonColors = ["#ff6b6b", "#4dabf7", "#51cf66", "#ff922b", "#9775fa"];
@@ -344,8 +362,19 @@ let connectRoundItems = [];
 let connectMatches = [];
 let activeConnection = null;
 let connectRoundCompleted = false;
+let sorterRoundCompleted = false;
+let sorterCorrectFound = 0;
+let sorterDrag = null;
+let busRoundCompleted = false;
+let busDrive = null;
+let busProgress = 0;
+let busRouteStates = [];
+let busSelectedRouteIndex = null;
+let busRouteSetIndex = -1;
 const lastSpecialFindSets = new Map();
 const lastSpecialConnectSets = new Map();
+const lastBusWords = new Map();
+const lastBusSets = new Map();
 let currentImagePath = null;
 let imageRequestId = 0;
 let imageRetryTimeout = null;
@@ -357,6 +386,8 @@ let letterSelectionTimeout = null;
 const letterSelectionDelay = 150;
 const completedLettersStorageKey = "azbukaCompletedLetters";
 const miniGameProgressStorageKey = "azbukaMiniGameProgress";
+const miniGameProgressVersionKey = "azbukaMiniGameProgressVersion";
+const currentMiniGameProgressVersion = 2;
 const miniGameIds = ["game1", "game2", "game3", "game4", "game5"];
 const completedLetters = new Set(loadCompletedLetters());
 const miniGameProgress = loadMiniGameProgress();
@@ -409,6 +440,7 @@ function migrateLegacyMiniGameValue(letter, value) {
 
 function loadMiniGameProgress() {
     const fallbackProgress = {};
+    let storedVersion = 1;
 
     alphabet.forEach((letterData) => {
         fallbackProgress[letterData.letter] = { completedGames: [] };
@@ -416,6 +448,7 @@ function loadMiniGameProgress() {
 
     try {
         const storedProgress = JSON.parse(localStorage.getItem(miniGameProgressStorageKey) ?? "{}");
+        storedVersion = Number(localStorage.getItem(miniGameProgressVersionKey)) || 1;
 
         if (!storedProgress || typeof storedProgress !== "object" || Array.isArray(storedProgress)) {
             return fallbackProgress;
@@ -423,8 +456,17 @@ function loadMiniGameProgress() {
 
         alphabet.forEach((letterData) => {
             const rawValue = storedProgress[letterData.letter];
+            const completedGames = migrateLegacyMiniGameValue(letterData.letter, rawValue);
+
+            if (storedVersion < currentMiniGameProgressVersion
+                && completedGames.includes("game3")
+                && !completedGames.includes("game4")
+                && completedGames.length < miniGameIds.length) {
+                completedGames.splice(completedGames.indexOf("game3"), 1, "game4");
+            }
+
             fallbackProgress[letterData.letter] = {
-                completedGames: migrateLegacyMiniGameValue(letterData.letter, rawValue)
+                completedGames
             };
         });
     } catch {
@@ -442,6 +484,12 @@ function loadMiniGameProgress() {
             completedGames: [...miniGameIds]
         };
     });
+
+    try {
+        localStorage.setItem(miniGameProgressVersionKey, String(currentMiniGameProgressVersion));
+    } catch {
+        // Progress migration stays available in memory.
+    }
 
     return fallbackProgress;
 }
@@ -462,6 +510,7 @@ function updateProgressUI() {
 function saveMiniGameProgress() {
     try {
         localStorage.setItem(miniGameProgressStorageKey, JSON.stringify(miniGameProgress));
+        localStorage.setItem(miniGameProgressVersionKey, String(currentMiniGameProgressVersion));
     } catch {
         // Progress remains available until the page is reloaded.
     }
@@ -545,6 +594,7 @@ function resetCompletedLettersProgress() {
     try {
         localStorage.removeItem(completedLettersStorageKey);
         localStorage.removeItem(miniGameProgressStorageKey);
+        localStorage.setItem(miniGameProgressVersionKey, String(currentMiniGameProgressVersion));
     } catch {
         // Ignore storage access issues and keep the UI reset in sync.
     }
@@ -586,6 +636,22 @@ function showScreen(screenId) {
     screens.forEach((screen) => {
         screen.classList.toggle("active", screen.id === screenId);
     });
+}
+
+function setGameScreenTitle(before, target, after = "") {
+    if (!gameScreenTitle) {
+        return;
+    }
+
+    const beforePart = document.createElement("span");
+    const targetPart = document.createElement("span");
+    const afterPart = document.createElement("span");
+
+    beforePart.textContent = before;
+    targetPart.textContent = target;
+    targetPart.className = "target-letter";
+    afterPart.textContent = after;
+    gameScreenTitle.replaceChildren(beforePart, targetPart, afterPart);
 }
 
 function clearImageRetry() {
@@ -710,6 +776,7 @@ function showLetter(letterData) {
 
     wordIndexes[selectedLetter.letter] = (wordIndex + 1) % selectedLetter.words.length;
     bigLetter.textContent = selectedLetter.letter;
+    letterTitle.textContent = `Буква ${selectedLetter.letter}`;
     wordsBlock.innerHTML = `<div class="wordCard">${word.text}</div>`;
     setActiveGameChoice(activeGameMode);
     showWordImage(word);
@@ -800,11 +867,32 @@ function setActiveGameChoice(gameMode) {
     gameChoiceButtons.forEach((button) => {
         const isActive = (gameMode === "balloons" && button === playBalloonsGameButton)
             || (gameMode === "findObjects" && button.id === "playGameButton")
-            || (gameMode === "connectLines" && button === playConnectGameButton);
+            || (gameMode === "sorter" && button === playSorterGameButton)
+            || (gameMode === "connectLines" && button === playConnectGameButton)
+            || (gameMode === "bus" && button === playBusGameButton);
 
         button.classList.toggle("is-active", isActive);
         button.setAttribute("aria-pressed", String(isActive));
     });
+}
+
+function hideGameBoards() {
+    findObjectCards?.classList.add("hidden");
+    connectLineBoard?.classList.add("hidden");
+    sorterBoard?.classList.add("hidden");
+    busBoard?.classList.add("hidden");
+    balloons?.classList.add("hidden");
+}
+
+function resetCelebrationOverlay() {
+    const celebrationOverlay = document.getElementById("findObjectCelebration");
+
+    if (!celebrationOverlay) {
+        return;
+    }
+
+    celebrationOverlay.classList.add("hidden");
+    celebrationOverlay.textContent = "";
 }
 
 function showFindObjectRound(letterData) {
@@ -819,20 +907,14 @@ function showFindObjectRound(letterData) {
     clearTimeout(nextRoundTimeout);
     stopBalloonAnimation();
 
-    if (gameScreenTitleText && gameScreenTitleLetter) {
-        if (letterData.letter === "Ъ") {
-            gameScreenTitleText.textContent = "Найди два слова, в которых есть твёрдый знак";
-            gameScreenTitleLetter.textContent = "";
-        } else if (letterData.letter === "Ь") {
-            gameScreenTitleText.textContent = "Найди два слова, в которых есть мягкий знак";
-            gameScreenTitleLetter.textContent = "";
-        } else if (letterData.letter === "Ы") {
-            gameScreenTitleText.textContent = "Найди два слова, в которых есть буква Ы";
-            gameScreenTitleLetter.textContent = "";
-        } else {
-            gameScreenTitleText.textContent = `Найди два слова на букву ${letterData.letter}`;
-            gameScreenTitleLetter.textContent = "";
-        }
+    if (letterData.letter === "Ъ") {
+        setGameScreenTitle("Найди два слова, в которых есть ", "твёрдый знак");
+    } else if (letterData.letter === "Ь") {
+        setGameScreenTitle("Найди два слова, в которых есть ", "мягкий знак");
+    } else if (letterData.letter === "Ы") {
+        setGameScreenTitle("Найди два слова, в которых есть буква ", "Ы");
+    } else {
+        setGameScreenTitle("Найди два слова на букву ", letterData.letter);
     }
 
     if (findObjectCards) {
@@ -841,6 +923,8 @@ function showFindObjectRound(letterData) {
     }
 
     connectLineBoard?.classList.add("hidden");
+    sorterBoard?.classList.add("hidden");
+    busBoard?.classList.add("hidden");
 
     if (repeatRoundButton) {
         repeatRoundButton.classList.remove("hidden");
@@ -855,12 +939,7 @@ function showFindObjectRound(letterData) {
         balloons.innerHTML = "";
     }
 
-    const celebrationOverlay = document.getElementById("findObjectCelebration");
-
-    if (celebrationOverlay) {
-        celebrationOverlay.classList.add("hidden");
-        celebrationOverlay.textContent = "";
-    }
+    resetCelebrationOverlay();
 
     findObjectRoundItems.forEach((item) => {
         const card = document.createElement("button");
@@ -888,6 +967,165 @@ function showFindObjectRound(letterData) {
         findObjectCards?.appendChild(card);
     });
 
+    showScreen("gameScreen");
+}
+
+function buildSorterRound(letterData) {
+    const wrongLetters = shuffleArray(alphabet
+        .filter((candidate) => candidate.letter !== letterData.letter)
+        .map((candidate) => candidate.letter)
+    ).slice(0, 6);
+
+    return shuffleArray([letterData.letter, letterData.letter, ...wrongLetters]);
+}
+
+function resetSorterLetterPosition() {
+    sorterDrag = null;
+    sorterLetter?.classList.remove("is-dragging");
+
+    if (sorterLetter) {
+        sorterLetter.style.transform = "";
+    }
+}
+
+function findSorterTargetAtPoint(clientX, clientY) {
+    return [...sorterShadows.querySelectorAll(".sorterShadow")].find((shadow) => {
+        const rect = shadow.getBoundingClientRect();
+
+        return clientX >= rect.left && clientX <= rect.right
+            && clientY >= rect.top && clientY <= rect.bottom;
+    }) ?? null;
+}
+
+function completeSorterGame(targetShadow) {
+    if (sorterRoundCompleted || !selectedLetter) {
+        return;
+    }
+
+    sorterRoundCompleted = true;
+    resetSorterLetterPosition();
+    sorterLetter?.classList.add("is-complete");
+    targetShadow.classList.add("is-matched");
+    recordMiniGameProgress(selectedLetter.letter, "game3");
+    repeatRoundButton.textContent = "Повторить";
+    repeatRoundButton.classList.remove("hidden");
+    backToLettersButton?.classList.remove("hidden");
+    showCelebrationPhrase(getCelebrationPhrase());
+}
+
+function handleSorterTargetChoice(targetShadow) {
+    if (sorterRoundCompleted || targetShadow.classList.contains("is-matched")) {
+        return;
+    }
+
+    if (targetShadow.dataset.correct === "true") {
+        targetShadow.classList.add("is-matched");
+        targetShadow.disabled = true;
+        sorterCorrectFound += 1;
+
+        if (sorterCorrectFound >= 2) {
+            completeSorterGame(targetShadow);
+        } else {
+            resetSorterLetterPosition();
+        }
+
+        return;
+    }
+
+    targetShadow.classList.add("is-wrong");
+    setTimeout(() => targetShadow.classList.remove("is-wrong"), 620);
+}
+
+function beginSorterDrag(event) {
+    if (sorterRoundCompleted) {
+        return;
+    }
+
+    event.preventDefault();
+    sorterDrag = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY
+    };
+    sorterLetter.setPointerCapture?.(event.pointerId);
+    sorterLetter.classList.add("is-dragging");
+}
+
+function moveSorterDrag(event) {
+    if (!sorterDrag || event.pointerId !== sorterDrag.pointerId) {
+        return;
+    }
+
+    const offsetX = event.clientX - sorterDrag.startX;
+    const offsetY = event.clientY - sorterDrag.startY;
+
+    sorterLetter.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(1.08)`;
+}
+
+function finishSorterDrag(event) {
+    if (!sorterDrag || event.pointerId !== sorterDrag.pointerId) {
+        return;
+    }
+
+    const targetShadow = findSorterTargetAtPoint(event.clientX, event.clientY);
+
+    sorterLetter.releasePointerCapture?.(event.pointerId);
+
+    if (targetShadow?.dataset.correct === "true") {
+        handleSorterTargetChoice(targetShadow);
+        return;
+    }
+
+    if (targetShadow) {
+        targetShadow.classList.add("is-wrong");
+        setTimeout(() => targetShadow.classList.remove("is-wrong"), 620);
+    }
+
+    resetSorterLetterPosition();
+}
+
+function showSorterRound(letterData) {
+    activeGameMode = "sorter";
+    setActiveGameChoice("sorter");
+    selectedLetter = letterData;
+    sorterRoundCompleted = false;
+    sorterCorrectFound = 0;
+    clearTimeout(nextRoundTimeout);
+    stopBalloonAnimation();
+    cancelActiveConnection();
+    hideGameBoards();
+    sorterBoard?.classList.remove("hidden");
+    sorterTopShadows?.replaceChildren();
+    sorterBottomShadows?.replaceChildren();
+    sorterLetter.textContent = letterData.letter;
+    sorterLetter.setAttribute("aria-label", `Буква ${letterData.letter}`);
+    sorterLetter.classList.remove("is-complete");
+    resetSorterLetterPosition();
+    setGameScreenTitle("Перетащи букву ", letterData.letter, " к её тени");
+    document.querySelector(".gameTitle").textContent = "";
+    repeatRoundButton.textContent = "Новые тени";
+    repeatRoundButton.classList.remove("hidden");
+    backToLettersButton?.classList.add("hidden");
+    resetCelebrationOverlay();
+
+    buildSorterRound(letterData).forEach((letter, index) => {
+        const shadow = document.createElement("button");
+
+        shadow.type = "button";
+        shadow.className = "sorterShadow";
+        shadow.textContent = letter;
+        shadow.dataset.correct = String(letter === letterData.letter);
+        shadow.setAttribute("aria-label", `Тень буквы ${letter}`);
+        shadow.addEventListener("click", () => handleSorterTargetChoice(shadow));
+        const shadowRow = index < 4 ? sorterTopShadows : sorterBottomShadows;
+
+        shadowRow?.appendChild(shadow);
+    });
+
+    sorterLetter.onpointerdown = beginSorterDrag;
+    sorterLetter.onpointermove = moveSorterDrag;
+    sorterLetter.onpointerup = finishSorterDrag;
+    sorterLetter.onpointercancel = resetSorterLetterPosition;
     showScreen("gameScreen");
 }
 
@@ -975,11 +1213,11 @@ function cancelActiveConnection(animate = false) {
 
 function completeConnectLineGame() {
     connectRoundCompleted = true;
-    recordMiniGameProgress(selectedLetter.letter, "game3");
+    recordMiniGameProgress(selectedLetter.letter, "game4");
     repeatRoundButton.textContent = "Повторить";
     repeatRoundButton.classList.remove("hidden");
     backToLettersButton?.classList.remove("hidden");
-    showCelebrationPhrase(celebrationPhrases[Math.floor(Math.random() * celebrationPhrases.length)]);
+    showCelebrationPhrase(getCelebrationPhrase());
 }
 
 function finishConnection(event) {
@@ -1055,22 +1293,23 @@ function showConnectLineRound(letterData) {
     stopBalloonAnimation();
 
     if (letterData.letter === "Ъ") {
-        gameScreenTitleText.textContent = "Соедини твёрдый знак с двумя подходящими словами";
+        setGameScreenTitle("Соедини ", "твёрдый знак", " с двумя подходящими словами");
         connectLineBoard.setAttribute("aria-label", "Соедини твёрдый знак с двумя подходящими словами");
     } else if (letterData.letter === "Ь") {
-        gameScreenTitleText.textContent = "Соедини мягкий знак с двумя подходящими словами";
+        setGameScreenTitle("Соедини ", "мягкий знак", " с двумя подходящими словами");
         connectLineBoard.setAttribute("aria-label", "Соедини мягкий знак с двумя подходящими словами");
     } else if (letterData.letter === "Ы") {
-        gameScreenTitleText.textContent = "Соедини букву Ы с двумя подходящими словами";
+        setGameScreenTitle("Соедини букву ", "Ы", " с двумя подходящими словами");
         connectLineBoard.setAttribute("aria-label", "Соедини букву Ы с двумя подходящими словами");
     } else {
-        gameScreenTitleText.textContent = `Соедини букву ${letterData.letter} с двумя подходящими изображениями`;
+        setGameScreenTitle("Соедини букву ", letterData.letter, " с двумя подходящими изображениями");
         connectLineBoard.setAttribute("aria-label", `Соедини букву ${letterData.letter} с двумя подходящими изображениями`);
     }
 
-    gameScreenTitleLetter.textContent = "";
     document.querySelector(".gameTitle").textContent = "";
     findObjectCards?.classList.add("hidden");
+    sorterBoard?.classList.add("hidden");
+    busBoard?.classList.add("hidden");
     connectLineBoard?.classList.remove("hidden");
     connectLeftImages.replaceChildren();
     connectRightImages.replaceChildren();
@@ -1082,12 +1321,7 @@ function showConnectLineRound(letterData) {
     backToLettersButton?.classList.add("hidden");
     balloons?.classList.add("hidden");
 
-    const celebrationOverlay = document.getElementById("findObjectCelebration");
-
-    if (celebrationOverlay) {
-        celebrationOverlay.classList.add("hidden");
-        celebrationOverlay.textContent = "";
-    }
+    resetCelebrationOverlay();
 
     connectRoundItems.forEach((item, index) => {
         const button = document.createElement("button");
@@ -1123,6 +1357,377 @@ function showConnectLineRound(letterData) {
 
     showScreen("gameScreen");
     requestAnimationFrame(redrawConnectLines);
+}
+
+const busRouteSets = [
+    [
+        { id: "top", path: "M 120 260 C 158 246 185 202 240 170 S 380 92 470 104 S 690 165 850 108" },
+        { id: "middle", path: "M 120 260 C 162 260 208 260 260 260 S 390 260 520 260 S 700 260 850 260" },
+        { id: "bottom", path: "M 120 260 C 158 276 185 322 240 352 S 380 438 470 416 S 690 350 850 412" }
+    ],
+    [
+        { id: "top", path: "M 120 260 C 158 246 184 202 235 172 S 310 74 440 92 S 655 70 850 122" },
+        { id: "middle", path: "M 120 260 C 164 260 208 260 258 258 S 350 212 475 244 S 685 305 850 260" },
+        { id: "bottom", path: "M 120 260 C 158 276 184 322 235 350 S 300 456 450 432 S 670 458 850 398" }
+    ],
+    [
+        { id: "top", path: "M 120 260 C 158 246 184 204 235 174 S 300 124 410 138 S 650 198 850 112" },
+        { id: "middle", path: "M 120 260 C 164 260 205 260 250 258 S 315 306 455 274 S 670 216 850 260" },
+        { id: "bottom", path: "M 120 260 C 158 276 184 318 235 348 S 300 382 430 398 S 650 332 850 414" }
+    ],
+    [
+        { id: "top", path: "M 120 260 C 158 246 184 202 238 172 S 295 82 430 116 S 635 142 850 106" },
+        { id: "middle", path: "M 120 260 C 164 260 210 260 262 262 S 336 230 470 258 S 690 288 850 260" },
+        { id: "bottom", path: "M 120 260 C 158 276 184 322 238 350 S 310 438 448 404 S 650 370 850 418" }
+    ]
+];
+
+function getNextBusRouteSet() {
+    const availableSets = busRouteSets
+        .map((routeSet, index) => ({ routeSet, index }))
+        .filter((item) => item.index !== busRouteSetIndex);
+    const nextSet = availableSets[Math.floor(Math.random() * availableSets.length)];
+
+    busRouteSetIndex = nextSet.index;
+    return nextSet.routeSet;
+}
+
+function getNextBusWord(letterData) {
+    const previousWord = lastBusWords.get(letterData.letter);
+    const availableWords = letterData.words.filter((word) => word.text !== previousWord);
+    const nextWord = availableWords[Math.floor(Math.random() * availableWords.length)] ?? letterData.words[0];
+
+    lastBusWords.set(letterData.letter, nextWord.text);
+    return nextWord;
+}
+
+function buildBusRound(letterData) {
+    if (isSpecialLetter(letterData.letter)) {
+        return buildSpecialWordSet(letterData, 1, 2, lastBusSets).map((word) => ({
+            word,
+            isCorrect: word.specialCharacter === letterData.letter
+        }));
+    }
+
+    const correctWord = getNextBusWord(letterData);
+    const wrongWords = shuffleArray(alphabet
+        .filter((candidate) => candidate.letter !== letterData.letter)
+        .flatMap((candidate) => candidate.words)
+    ).slice(0, 2);
+
+    return shuffleArray([
+        { word: correctWord, isCorrect: true },
+        ...wrongWords.map((word) => ({ word, isCorrect: false }))
+    ]);
+}
+
+function createBusRouteStates(options, routes) {
+    const svgNamespace = "http://www.w3.org/2000/svg";
+
+    busRoadSvg.replaceChildren();
+    busRouteStates = routes.map((route, index) => {
+        const hitArea = document.createElementNS(svgNamespace, "path");
+        const road = document.createElementNS(svgNamespace, "path");
+        const dashes = document.createElementNS(svgNamespace, "path");
+
+        hitArea.classList.add("busRoadHitArea");
+        road.classList.add("busRoadPath");
+        dashes.classList.add("busRoadDashes");
+        hitArea.setAttribute("d", route.path);
+        road.setAttribute("d", route.path);
+        dashes.setAttribute("d", route.path);
+        busRoadSvg.append(hitArea, road, dashes);
+
+        const length = road.getTotalLength();
+        const samples = Array.from({ length: 141 }, (_, sampleIndex) => {
+            const progress = sampleIndex / 140;
+            const point = road.getPointAtLength(length * progress);
+
+            return { progress, x: point.x, y: point.y };
+        });
+
+        return { ...route, road, length, samples, option: options[index], destination: null };
+    });
+}
+
+function createBusDestinations() {
+    busDestinations.replaceChildren();
+
+    busRouteStates.forEach((routeState) => {
+        const destination = document.createElement("div");
+        const label = document.createElement("span");
+        const endpoint = routeState.road.getPointAtLength(routeState.length);
+
+        destination.className = "busDestination";
+        destination.dataset.correct = String(routeState.option.isCorrect);
+        destination.setAttribute("aria-label", routeState.option.word.text);
+        label.className = "busDestinationLabel";
+
+        if (isSpecialLetter(selectedLetter.letter)) {
+            destination.classList.add("specialWordCard");
+            appendHighlightedSpecialWord(label, routeState.option.word.text, routeState.option.word.specialCharacter);
+        } else {
+            const image = document.createElement("img");
+
+            image.src = routeState.option.word.image;
+            image.alt = routeState.option.word.text;
+            destination.appendChild(image);
+            label.textContent = routeState.option.word.text;
+        }
+
+        destination.appendChild(label);
+        routeState.destination = destination;
+        busDestinations.appendChild(destination);
+        placeBusElement(destination, endpoint);
+    });
+}
+
+function placeBusElement(element, point) {
+    element.style.left = `${(point.x / 1000) * busBoard.clientWidth}px`;
+    element.style.top = `${(point.y / 520) * busBoard.clientHeight}px`;
+}
+
+function layoutBusRound() {
+    if (busBoard.classList.contains("hidden") || busRouteStates.length === 0) {
+        return;
+    }
+
+    const activeRoute = busRouteStates[busSelectedRouteIndex ?? 0];
+
+    placeBusElement(busVehicle, activeRoute.road.getPointAtLength(activeRoute.length * busProgress));
+    placeBusElement(busStartMarker, activeRoute.road.getPointAtLength(0));
+    busRouteStates.forEach((routeState) => {
+        placeBusElement(routeState.destination, routeState.road.getPointAtLength(routeState.length));
+    });
+}
+
+function getBusPointerPoint(event) {
+    const rect = busBoard.getBoundingClientRect();
+
+    return {
+        x: ((event.clientX - rect.left) / rect.width) * 1000,
+        y: ((event.clientY - rect.top) / rect.height) * 520
+    };
+}
+
+function getNearestBusRoute(pointer, routeStates = busRouteStates, minimumProgress = 0) {
+    let nearestRoute = null;
+    let nearestSample = null;
+    let nearestDistance = Infinity;
+
+    routeStates.forEach((routeState, index) => {
+        routeState.samples.filter((sample) => sample.progress >= minimumProgress).forEach((sample) => {
+            const distance = Math.hypot(sample.x - pointer.x, sample.y - pointer.y);
+
+            if (distance < nearestDistance) {
+                nearestRoute = { routeState, index };
+                nearestSample = sample;
+                nearestDistance = distance;
+            }
+        });
+    });
+
+    return { nearestRoute, nearestSample, nearestDistance };
+}
+
+function moveBusToPointer(event) {
+    if (busRoundCompleted || busRouteStates.length === 0 || busSelectedRouteIndex === null) {
+        return;
+    }
+
+    const pointer = getBusPointerPoint(event);
+    const selectedRoute = busRouteStates[busSelectedRouteIndex];
+    const { nearestSample, nearestDistance } = getNearestBusRoute(pointer, [selectedRoute]);
+
+    if (!nearestSample
+        || nearestDistance > 105
+        || nearestSample.progress < busProgress - 0.05
+        || nearestSample.progress > busProgress + 0.24) {
+        return;
+    }
+
+    busProgress = Math.max(busProgress, nearestSample.progress);
+    layoutBusRound();
+
+}
+
+function selectBusRoute(event) {
+    if (!busDrive || busSelectedRouteIndex !== null) {
+        return busSelectedRouteIndex !== null;
+    }
+
+    const distanceFromStart = Math.hypot(
+        event.clientX - busDrive.startClientX,
+        event.clientY - busDrive.startClientY
+    );
+
+    if (distanceFromStart < 20) {
+        return false;
+    }
+
+    const verticalOffset = event.clientY - busDrive.startClientY;
+    const directionThreshold = 16;
+
+    busSelectedRouteIndex = verticalOffset <= -directionThreshold
+        ? 0
+        : verticalOffset >= directionThreshold
+            ? 2
+            : 1;
+    return true;
+}
+
+function beginBusDrive(event) {
+    if (busRoundCompleted) {
+        return;
+    }
+
+    event.preventDefault();
+    const pointer = getBusPointerPoint(event);
+
+    busDrive = {
+        pointerId: event.pointerId,
+        startX: pointer.x,
+        startY: pointer.y,
+        startClientX: event.clientX,
+        startClientY: event.clientY
+    };
+    busVehicle.setPointerCapture?.(event.pointerId);
+    busVehicle.classList.add("is-driving");
+}
+
+function continueBusDrive(event) {
+    if (!busDrive || event.pointerId !== busDrive.pointerId) {
+        return;
+    }
+
+    if (selectBusRoute(event)) {
+        moveBusToPointer(event);
+    }
+}
+
+function finishBusDrive(event) {
+    if (!busDrive || event.pointerId !== busDrive.pointerId) {
+        return;
+    }
+
+    busVehicle.releasePointerCapture?.(event.pointerId);
+    busDrive = null;
+    busVehicle.classList.remove("is-driving");
+
+    if (busProgress >= 0.93 && busSelectedRouteIndex !== null) {
+        resolveBusDestination();
+    } else {
+        busVehicle.classList.add("needs-more-road");
+        setTimeout(() => busVehicle.classList.remove("needs-more-road"), 520);
+    }
+}
+
+function cancelBusDrive(event) {
+    if (!busDrive || event.pointerId !== busDrive.pointerId) {
+        return;
+    }
+
+    busVehicle.releasePointerCapture?.(event.pointerId);
+    busVehicle.classList.remove("is-driving");
+    resetBusVehicle();
+}
+
+function resetBusVehicle() {
+    busDrive = null;
+    busProgress = 0;
+    busSelectedRouteIndex = null;
+    busVehicle.classList.add("is-returning");
+    layoutBusRound();
+    setTimeout(() => busVehicle.classList.remove("is-returning"), 300);
+}
+
+function resolveBusDestination() {
+    const selectedRoute = busRouteStates[busSelectedRouteIndex];
+
+    if (!selectedRoute) {
+        resetBusVehicle();
+        return;
+    }
+
+    busProgress = 1;
+    layoutBusRound();
+
+    if (selectedRoute.option.isCorrect) {
+        completeBusGame(selectedRoute.destination);
+        return;
+    }
+
+    selectedRoute.destination.classList.add("is-wrong");
+    busVehicle.classList.add("needs-more-road");
+    setTimeout(() => {
+        selectedRoute.destination.classList.remove("is-wrong");
+        busVehicle.classList.remove("needs-more-road");
+        resetBusVehicle();
+    }, 620);
+}
+
+function completeBusGame(destination) {
+    if (busRoundCompleted || !selectedLetter) {
+        return;
+    }
+
+    busRoundCompleted = true;
+    busDrive = null;
+    busProgress = 1;
+    layoutBusRound();
+    busVehicle.classList.remove("is-driving");
+    busVehicle.classList.add("is-arrived");
+    destination.classList.add("is-reached");
+    recordMiniGameProgress(selectedLetter.letter, "game5");
+    repeatRoundButton.textContent = "Повторить";
+    repeatRoundButton.classList.remove("hidden");
+    backToLettersButton?.classList.remove("hidden");
+    showCelebrationPhrase(getCelebrationPhrase());
+}
+
+function showBusRound(letterData) {
+    const options = buildBusRound(letterData);
+    const routes = getNextBusRouteSet();
+
+    activeGameMode = "bus";
+    setActiveGameChoice("bus");
+    selectedLetter = letterData;
+    busRoundCompleted = false;
+    busDrive = null;
+    busProgress = 0;
+    busSelectedRouteIndex = null;
+    clearTimeout(nextRoundTimeout);
+    stopBalloonAnimation();
+    cancelActiveConnection();
+    resetSorterLetterPosition();
+    hideGameBoards();
+    busBoard.classList.remove("hidden");
+    busVehicle.classList.remove("is-arrived", "is-driving", "needs-more-road", "is-returning");
+    createBusRouteStates(options, routes);
+    createBusDestinations();
+
+    if (letterData.letter === "Ъ") {
+        setGameScreenTitle("Проведи автобус к слову с ", "твёрдым знаком");
+    } else if (letterData.letter === "Ь") {
+        setGameScreenTitle("Проведи автобус к слову с ", "мягким знаком");
+    } else if (letterData.letter === "Ы") {
+        setGameScreenTitle("Проведи автобус к слову с буквой ", "Ы");
+    } else {
+        setGameScreenTitle("Проведи автобус к слову на букву ", letterData.letter);
+    }
+
+    document.querySelector(".gameTitle").textContent = "Веди автобус пальцем по дороге";
+    repeatRoundButton.textContent = "Новая дорога";
+    repeatRoundButton.classList.remove("hidden");
+    backToLettersButton?.classList.add("hidden");
+    resetCelebrationOverlay();
+    showScreen("gameScreen");
+    requestAnimationFrame(layoutBusRound);
+
+    busVehicle.onpointerdown = beginBusDrive;
+    busVehicle.onpointermove = continueBusDrive;
+    busVehicle.onpointerup = finishBusDrive;
+    busVehicle.onpointercancel = cancelBusDrive;
 }
 
 function handleFindObjectCardClick(card, item) {
@@ -1170,8 +1775,7 @@ function completeFindObjectGame() {
         backToLettersButton.classList.remove("hidden");
     }
 
-    const phrase = celebrationPhrases[Math.floor(Math.random() * celebrationPhrases.length)];
-    showCelebrationPhrase(phrase);
+    showCelebrationPhrase(getCelebrationPhrase());
 
 }
 
@@ -1204,6 +1808,14 @@ function launchConfetti() {
     setTimeout(() => {
         confettiContainer.innerHTML = "";
     }, 2200);
+}
+
+function getCelebrationPhrase() {
+    const availablePhrases = celebrationPhrases.filter((phrase) => phrase !== lastCelebrationPhrase);
+    const phrase = availablePhrases[Math.floor(Math.random() * availablePhrases.length)] ?? celebrationPhrases[0];
+
+    lastCelebrationPhrase = phrase;
+    return phrase;
 }
 
 function showCelebrationPhrase(phrase) {
@@ -1333,12 +1945,7 @@ function finishRound() {
     balloons.innerHTML = "";
 
     const celebration = document.createElement("div");
-    const availablePhrases = celebrationPhrases.filter((phrase) => phrase !== lastCelebrationPhrase);
-    const phrase = availablePhrases.length > 0
-        ? availablePhrases[Math.floor(Math.random() * availablePhrases.length)]
-        : celebrationPhrases[0];
-
-    lastCelebrationPhrase = phrase;
+    const phrase = getCelebrationPhrase();
     celebration.textContent = phrase;
     celebration.style.position = "fixed";
     celebration.style.top = "50%";
@@ -1419,12 +2026,14 @@ function showBalloonGame(letterData) {
     cancelActiveConnection();
     findObjectCards?.classList.add("hidden");
     connectLineBoard?.classList.add("hidden");
+    sorterBoard?.classList.add("hidden");
+    busBoard?.classList.add("hidden");
     balloons?.classList.remove("hidden");
     repeatRoundButton?.classList.add("hidden");
     backToLettersButton?.classList.add("hidden");
-    gameScreenTitleText.textContent = "Лопни шарики с буквой";
-    gameScreenTitleLetter.textContent = letterData.letter;
+    setGameScreenTitle("Лопни шарики с буквой ", letterData.letter);
     document.querySelector(".gameTitle").textContent = "Найди 3 шарика";
+    resetCelebrationOverlay();
     showScreen("gameScreen");
     createGameRound();
 }
@@ -1580,9 +2189,21 @@ if (playBalloonsGameButton) {
     });
 }
 
+if (playSorterGameButton) {
+    playSorterGameButton.addEventListener("click", () => {
+        showSorterRound(selectedLetter);
+    });
+}
+
 if (playConnectGameButton) {
     playConnectGameButton.addEventListener("click", () => {
         showConnectLineRound(selectedLetter);
+    });
+}
+
+if (playBusGameButton) {
+    playBusGameButton.addEventListener("click", () => {
+        showBusRound(selectedLetter);
     });
 }
 
@@ -1590,6 +2211,10 @@ if (repeatRoundButton) {
     repeatRoundButton.addEventListener("click", () => {
         if (activeGameMode === "connectLines") {
             showConnectLineRound(selectedLetter);
+        } else if (activeGameMode === "sorter") {
+            showSorterRound(selectedLetter);
+        } else if (activeGameMode === "bus") {
+            showBusRound(selectedLetter);
         } else {
             showFindObjectRound(selectedLetter);
         }
@@ -1604,11 +2229,16 @@ if (backToLettersButton) {
 
 document.getElementById("backLetterButton").addEventListener("click", () => {
     cancelActiveConnection();
+    resetSorterLetterPosition();
+    busDrive = null;
     clearTimeout(nextRoundTimeout);
     stopBalloonAnimation();
     showScreen("letterScreen");
 });
 
-window.addEventListener("resize", redrawConnectLines);
+window.addEventListener("resize", () => {
+    redrawConnectLines();
+    layoutBusRound();
+});
 
 showScreen("homeScreen");

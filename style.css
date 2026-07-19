@@ -101,6 +101,40 @@ body {
     cursor: pointer;
 }
 
+.overallProgress {
+    width: min(760px, 100%);
+    margin: 0 auto clamp(10px, 1.5vh, 14px);
+    padding: 8px 12px;
+    border: 2px solid rgba(255, 255, 255, .78);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, .58);
+    box-shadow: 0 5px 12px rgba(69, 101, 152, .12);
+}
+
+.overallProgressText {
+    margin-bottom: 6px;
+    color: #4f5f8c;
+    text-align: center;
+    font-size: clamp(16px, 3vw, 20px);
+    font-weight: 700;
+}
+
+.overallProgressTrack {
+    height: 12px;
+    overflow: hidden;
+    border: 3px solid rgba(255, 255, 255, .84);
+    border-radius: 999px;
+    background: #e2e9fb;
+}
+
+.overallProgressFill {
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #51cf66, #4dabf7, #9775fa);
+    transition: width 300ms ease;
+}
+
 .lettersGrid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -346,6 +380,70 @@ body {
 #lettersScreen .header h2 {
     color: #385b7a;
     font-size: clamp(24px, 5vw, 34px);
+}
+
+@media (min-width: 721px) and (min-height: 680px) {
+    #lettersScreen {
+        overflow-y: hidden;
+        padding: clamp(10px, 1.6vw, 20px);
+    }
+
+    #lettersScreen .header {
+        margin-bottom: clamp(8px, 1.5vh, 14px);
+    }
+
+    .overallProgress {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: min(640px, 100%);
+    }
+
+    .overallProgressText {
+        flex: 0 0 auto;
+        margin: 0;
+        text-align: left;
+        white-space: nowrap;
+        font-size: clamp(15px, 1.6vw, 18px);
+    }
+
+    .overallProgressTrack {
+        flex: 1;
+    }
+
+    .lettersGrid {
+        width: min(520px, 100%);
+        gap: clamp(10px, 1.4vh, 12px) clamp(10px, 1.2vw, 12px);
+        justify-items: center;
+    }
+
+    .letterCardWrapper,
+    .letterCard {
+        width: clamp(62px, min(9.2vh, 7vw), 78px);
+        height: auto;
+    }
+
+    .letterCard {
+        height: clamp(62px, min(9.2vh, 7vw), 78px);
+        font-size: clamp(31px, 4.2vw, 40px);
+    }
+
+    .letterProgressRing {
+        inset: -5px;
+        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 0);
+        mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 0);
+    }
+}
+
+@media (max-width: 720px) {
+    .overallProgress {
+        display: grid;
+        gap: 6px;
+    }
+
+    .overallProgressText {
+        margin: 0;
+    }
 }
 
 #lettersScreen::-webkit-scrollbar {
@@ -690,10 +788,22 @@ body {
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 0;
     text-align: center;
     color: #385b7a;
     font-size: clamp(22px, 4vw, 32px);
+}
+
+.target-letter {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 .12em;
+    color: #f04f6c;
+    font-size: 1.14em;
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+    text-shadow: 0 2px 0 rgba(255, 255, 255, .92), 0 5px 12px rgba(247, 80, 107, .24);
 }
 
 .gameScreenTitleLetter {
@@ -722,7 +832,9 @@ body {
 }
 
 .findObjectCards.hidden,
-.connectLineBoard.hidden {
+.connectLineBoard.hidden,
+.sorterBoard.hidden,
+.busBoard.hidden {
     display: none;
 }
 
@@ -849,6 +961,263 @@ body {
         stroke: #ff6b6b;
         stroke-dashoffset: 24;
     }
+}
+
+.sorterBoard {
+    width: min(760px, 100%);
+    margin: 0 auto;
+    padding: clamp(18px, 3vw, 30px);
+    border: 5px solid rgba(255, 255, 255, .78);
+    border-radius: 30px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, .8), rgba(226, 241, 255, .76));
+    box-shadow: 0 16px 32px rgba(69, 101, 152, .16);
+    touch-action: none;
+}
+
+.sorterShadows {
+    display: grid;
+    gap: clamp(14px, 2.5vh, 24px);
+}
+
+.sorterShadowRow {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(8px, 1.6vw, 14px);
+}
+
+.sorterShadow {
+    display: grid;
+    place-items: center;
+    min-height: clamp(84px, 13vw, 116px);
+    border: 3px dashed rgba(96, 113, 145, .42);
+    border-radius: 22px;
+    background: rgba(218, 226, 239, .58);
+    color: #aeb8ca;
+    font-size: clamp(52px, 8vw, 82px);
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    text-shadow: 0 4px 0 rgba(255, 255, 255, .68);
+    transition: transform 180ms ease, color 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.sorterShadow.is-matched {
+    border-style: solid;
+    border-color: #51cf66;
+    background: linear-gradient(145deg, #f1fff4, #d6f7dd);
+    color: #f56f83;
+    animation: sorterMatch 420ms ease-out;
+}
+
+.sorterShadow.is-wrong {
+    animation: objectCardShake 180ms ease-in-out 3;
+}
+
+.sorterDragZone {
+    display: grid;
+    place-items: center;
+    min-height: clamp(150px, 20vh, 184px);
+    border-radius: 26px;
+    background: rgba(255, 255, 255, .45);
+}
+
+.sorterLetter {
+    display: grid;
+    place-items: center;
+    width: clamp(132px, 18vw, 170px);
+    aspect-ratio: 1;
+    border: 5px solid rgba(255, 255, 255, .92);
+    border-radius: 38%;
+    background: linear-gradient(145deg, #fff9fd, #f0eaff);
+    color: #f56f83;
+    font-size: clamp(96px, 13vw, 132px);
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 14px 28px rgba(111, 88, 167, .24);
+    cursor: grab;
+    touch-action: none;
+    transition: transform 220ms ease, opacity 180ms ease, box-shadow 180ms ease;
+}
+
+.sorterLetter.is-dragging {
+    z-index: 8;
+    cursor: grabbing;
+    box-shadow: 0 20px 36px rgba(111, 88, 167, .32);
+    transition: none;
+}
+
+.sorterLetter.is-complete {
+    opacity: 0;
+    pointer-events: none;
+}
+
+@keyframes sorterMatch {
+    0% { transform: scale(.84); }
+    55% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.busBoard {
+    position: relative;
+    width: min(820px, 100%);
+    aspect-ratio: 1000 / 520;
+    min-height: 320px;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 6px solid rgba(255, 255, 255, .84);
+    border-radius: 32px;
+    background:
+        radial-gradient(circle at 18% 20%, rgba(255, 255, 255, .72), transparent 22%),
+        linear-gradient(180deg, #bfe8ff 0 46%, #a8e49a 46% 100%);
+    box-shadow: 0 18px 38px rgba(53, 103, 141, .2);
+    touch-action: none;
+}
+
+.busRoadSvg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.busRoadPath,
+.busRoadDashes,
+.busRoadHitArea {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.busRoadPath {
+    stroke: #66717d;
+    stroke-width: 62;
+    filter: drop-shadow(0 7px 5px rgba(52, 67, 81, .22));
+}
+
+.busRoadDashes {
+    stroke: rgba(255, 255, 255, .9);
+    stroke-width: 8;
+    stroke-dasharray: 28 24;
+}
+
+.busRoadHitArea {
+    stroke: transparent;
+    stroke-width: 118;
+    pointer-events: none;
+}
+
+.busDestinations {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.busVehicle,
+.busStartMarker,
+.busDestination {
+    position: absolute;
+    transform: translate(-50%, -50%);
+}
+
+.busVehicle {
+    z-index: 6;
+    display: grid;
+    place-items: center;
+    width: clamp(64px, 10vw, 86px);
+    aspect-ratio: 1;
+    border: 4px solid white;
+    border-radius: 24px;
+    background: linear-gradient(145deg, #ffe56a, #ffb703);
+    box-shadow: 0 10px 20px rgba(89, 68, 32, .28);
+    font-size: clamp(38px, 6vw, 56px);
+    cursor: grab;
+    touch-action: none;
+    transition: left 80ms linear, top 80ms linear, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.busVehicle.is-driving {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) scale(1.08);
+    box-shadow: 0 14px 24px rgba(89, 68, 32, .34);
+}
+
+.busVehicle.needs-more-road {
+    animation: busNudge 520ms ease;
+}
+
+.busVehicle.is-arrived {
+    animation: busArrive 520ms ease-out;
+}
+
+.busVehicle.is-returning {
+    transition: left 300ms ease, top 300ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.busStartMarker {
+    z-index: 3;
+    padding: 6px 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .9);
+    color: #4f5f8c;
+    font-size: clamp(12px, 2vw, 16px);
+    font-weight: 800;
+    pointer-events: none;
+}
+
+.busDestination {
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: clamp(102px, 16vw, 138px);
+    padding: 7px;
+    border: 4px solid white;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 10px 22px rgba(69, 101, 152, .24);
+    color: #4f5f8c;
+    font-size: clamp(13px, 2.2vw, 18px);
+    font-weight: 800;
+    line-height: 1.05;
+    text-align: center;
+    pointer-events: none;
+    transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.busDestination img {
+    width: 100%;
+    height: clamp(68px, 11vw, 94px);
+    object-fit: contain;
+}
+
+.busDestinationLabel {
+    display: block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.busDestination.is-reached {
+    border-color: #51cf66;
+    transform: translate(-50%, -50%) scale(1.06);
+}
+
+.busDestination.is-wrong {
+    border-color: #ff6b6b;
+    animation: objectCardShake 180ms ease-in-out 3;
+}
+
+@keyframes busNudge {
+    0%, 100% { transform: translate(-50%, -50%); }
+    35% { transform: translate(-58%, -50%) rotate(-4deg); }
+    70% { transform: translate(-42%, -50%) rotate(4deg); }
+}
+
+@keyframes busArrive {
+    0% { transform: translate(-50%, -50%) scale(.9); }
+    55% { transform: translate(-50%, -50%) scale(1.18) rotate(5deg); }
+    100% { transform: translate(-50%, -50%) scale(1); }
 }
 
 .findObjectCard {
@@ -1137,5 +1506,64 @@ body {
 
     .gameChoiceButton {
         min-height: 58px;
+    }
+}
+
+@media (max-width: 900px) {
+    .gameChoicePanel {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .sorterBoard {
+        gap: 20px;
+        padding: 14px;
+    }
+
+    .sorterShadows {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .sorterShadowRow {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .sorterShadow {
+        min-height: clamp(68px, 18vw, 84px);
+        border-radius: 18px;
+        font-size: clamp(42px, 11vw, 58px);
+    }
+
+    .sorterDragZone {
+        min-height: 126px;
+    }
+
+    .sorterLetter {
+        width: clamp(118px, 34vw, 136px);
+        font-size: clamp(84px, 22vw, 106px);
+    }
+
+    .busBoard {
+        min-height: 300px;
+    }
+
+    .busDestination {
+        width: clamp(76px, 22vw, 96px);
+        padding: 4px;
+        border-width: 3px;
+        border-radius: 16px;
+        font-size: 11px;
+    }
+
+    .busDestination img {
+        height: clamp(44px, 12vw, 58px);
+    }
+
+    .gameChoicePanel {
+        grid-template-columns: 1fr;
     }
 }

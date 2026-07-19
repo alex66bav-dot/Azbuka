@@ -45,6 +45,13 @@
 
         </div>
 
+        <div class="overallProgress" aria-label="Общий прогресс">
+            <div class="overallProgressText">Пройдено <strong id="progressText">0 из 33</strong></div>
+            <div class="overallProgressTrack">
+                <div id="progressBarFill" class="overallProgressFill"></div>
+            </div>
+        </div>
+
         <div id="lettersGrid" class="lettersGrid">
 
         </div>
@@ -109,8 +116,14 @@
                 <button id="playGameButton" class="gameChoiceButton" type="button">
                     Найди два слова
                 </button>
+                <button id="playSorterGameButton" class="gameChoiceButton" type="button">
+                    Найди тень
+                </button>
                 <button id="playConnectGameButton" class="gameChoiceButton" type="button">
                     Соедини линией
+                </button>
+                <button id="playBusGameButton" class="gameChoiceButton" type="button">
+                    Проведи автобус
                 </button>
             </aside>
         </div>
@@ -150,6 +163,23 @@
             <svg id="connectLines" class="connectLines" aria-hidden="true"></svg>
             <button id="connectCenterLetter" class="connectCenterLetter" type="button" aria-label="Выбранная буква"></button>
             <div id="connectRightImages" class="connectColumn connectImages connectRightImages"></div>
+        </div>
+
+        <div id="sorterBoard" class="sorterBoard hidden" aria-label="Перетащи букву к её тени">
+            <div id="sorterShadows" class="sorterShadows">
+                <div id="sorterTopShadows" class="sorterShadowRow"></div>
+                <div class="sorterDragZone">
+                    <button id="sorterLetter" class="sorterLetter" type="button" aria-label="Перетаскиваемая буква"></button>
+                </div>
+                <div id="sorterBottomShadows" class="sorterShadowRow"></div>
+            </div>
+        </div>
+
+        <div id="busBoard" class="busBoard hidden" aria-label="Проведи автобус по дороге к слову">
+            <svg id="busRoadSvg" class="busRoadSvg" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true"></svg>
+            <div id="busStartMarker" class="busStartMarker">Старт</div>
+            <div id="busDestinations" class="busDestinations"></div>
+            <button id="busVehicle" class="busVehicle" type="button" aria-label="Автобус">🚌</button>
         </div>
 
         <div id="findObjectCelebration" class="findObjectCelebration hidden" aria-live="polite"></div>
