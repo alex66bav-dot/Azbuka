@@ -334,6 +334,10 @@ body {
     color: white;
 }
 
+.soundToggleButton {
+    margin-bottom: 8px;
+}
+
 .resetConfirmBlock {
     margin-top: 16px;
     padding-top: 16px;

@@ -195,17 +195,18 @@ const customWordImages = {
         Съезд: "congress.png"
     },
     Ы: {
-        Сыр: "cheese.png",
-        Рыба: "fish.png",
+        Сырок: "syrok.png",
+        Лыжи: "lyzhi.png",
         Дым: "smoke.png",
-        Тыква: "Тыква.png"
+        Тыква: "tykva.png",
+        Мыло: "mylo.png"
     },
     Ь: {
         Семья: "family.png",
         Конь: "horse.png",
         Пальто: "coat.png",
         Мальчик: "boy.png",
-        Медведь: "bear.png"
+        Степь: "step.png"
     },
     Э: {
         Эскимо: "popsicle.png",
@@ -231,7 +232,7 @@ const customWordImages = {
 };
 const sharedWordImagePaths = {
     Ы: {
-        Мыло: "assets/images/letters/m/mylo.png"
+        Мыло: "assets/images/letters/yery/mylo.png"
     }
 };
 
@@ -252,9 +253,17 @@ function createWord(letter, text) {
             .join("")
             .replace(/\s+/g, "-")}.png`;
 
+    const audioName = text
+        .toLowerCase()
+        .split("")
+        .map((character) => wordTransliteration[character] ?? character)
+        .join("")
+        .replace(/\s+/g, "-");
+
     return {
         text,
-        image: sharedImagePath ?? `assets/images/letters/${getLetterFolderName(letter)}/${imageName}`
+        image: sharedImagePath ?? `assets/images/letters/${getLetterFolderName(letter)}/${imageName}`,
+        audio: audioName
     };
 }
 
@@ -291,14 +300,15 @@ const alphabet = [
     { letter: "Ш", words: createWords("Ш", ["Шар", "Шуба", "Шоколад", "Шишка", "Шмель"]) },
     { letter: "Щ", words: createWords("Щ", ["Щука", "Щенок", "Щётка", "Щавель", "Щит"]) },
     { letter: "Ъ", words: createWords("Ъ", ["Подъезд", "Объём", "Съёмка", "Объявление", "Съезд"]) },
-    { letter: "Ы", words: createWords("Ы", ["Сыр", "Рыба", "Дым", "Тыква", "Мыло"]) },
-    { letter: "Ь", words: createWords("Ь", ["Семья", "Конь", "Пальто", "Мальчик", "Медведь"]) },
+    { letter: "Ы", words: createWords("Ы", ["Сырок", "Лыжи", "Дым", "Тыква", "Мыло"]) },
+    { letter: "Ь", words: createWords("Ь", ["Семья", "Конь", "Пальто", "Мальчик", "Степь"]) },
     { letter: "Э", words: createWords("Э", ["Эскимо", "Экран", "Экскаватор", "Эхо", "Этажерка"]) },
     { letter: "Ю", words: createWords("Ю", ["Юла", "Юбка", "Юрта", "Юнга", "Юмор"]) },
     { letter: "Я", words: createWords("Я", ["Яблоко", "Ягода", "Якорь", "Ящерица", "Яйцо"]) }
 ];
 
 let selectedLetter = null;
+let displayedLetterWord = null;
 const wordIndexes = Object.fromEntries(alphabet.map((letterData) => [letterData.letter, 0]));
 
 const lettersGrid = document.getElementById("lettersGrid");
@@ -322,6 +332,7 @@ const resetConfirmBlock = document.getElementById("resetConfirmBlock");
 const cancelResetButton = document.getElementById("cancelResetButton");
 const confirmResetButton = document.getElementById("confirmResetButton");
 const closeSettingsButton = document.getElementById("closeSettingsButton");
+const soundToggleButton = document.getElementById("soundToggleButton");
 const repeatRoundButton = document.getElementById("repeatRoundButton");
 const playBalloonsGameButton = document.getElementById("playBalloonsGameButton");
 const playSorterGameButton = document.getElementById("playSorterGameButton");
@@ -607,6 +618,7 @@ function resetCompletedLettersProgress() {
 }
 
 function openSettingsModal() {
+    updateSoundToggle();
     if (settingsOverlay) {
         settingsOverlay.classList.remove("hidden");
     }
@@ -614,6 +626,16 @@ function openSettingsModal() {
     if (resetConfirmBlock) {
         resetConfirmBlock.classList.add("hidden");
     }
+}
+
+function updateSoundToggle() {
+    if (!soundToggleButton || !window.AzbukaAudio) {
+        return;
+    }
+
+    const isEnabled = window.AzbukaAudio.isEnabled();
+    soundToggleButton.textContent = `Звук: ${isEnabled ? "включён" : "выключен"}`;
+    soundToggleButton.setAttribute("aria-pressed", String(isEnabled));
 }
 
 function closeSettingsModal() {
@@ -633,6 +655,10 @@ function showResetProgressConfirmation() {
 }
 
 function showScreen(screenId) {
+    if (screenId !== "letterScreen") {
+        window.AzbukaAudio?.stopVoice();
+    }
+
     screens.forEach((screen) => {
         screen.classList.toggle("active", screen.id === screenId);
     });
@@ -773,6 +799,7 @@ function showLetter(letterData) {
     selectedLetter = letterData;
     const wordIndex = wordIndexes[selectedLetter.letter];
     const word = selectedLetter.words[wordIndex];
+    displayedLetterWord = word;
 
     wordIndexes[selectedLetter.letter] = (wordIndex + 1) % selectedLetter.words.length;
     bigLetter.textContent = selectedLetter.letter;
@@ -781,6 +808,7 @@ function showLetter(letterData) {
     setActiveGameChoice(activeGameMode);
     showWordImage(word);
     showScreen("letterScreen");
+    window.AzbukaAudio?.playLetter(getLetterFolderName(letterData.letter));
 }
 
 function isSpecialLetter(letter) {
@@ -1010,6 +1038,7 @@ function completeSorterGame(targetShadow) {
     repeatRoundButton.textContent = "Повторить";
     repeatRoundButton.classList.remove("hidden");
     backToLettersButton?.classList.remove("hidden");
+    window.AzbukaAudio?.playEffect("win");
     showCelebrationPhrase(getCelebrationPhrase());
 }
 
@@ -1026,6 +1055,7 @@ function handleSorterTargetChoice(targetShadow) {
         if (sorterCorrectFound >= 2) {
             completeSorterGame(targetShadow);
         } else {
+            window.AzbukaAudio?.playEffect("correct");
             resetSorterLetterPosition();
         }
 
@@ -1033,6 +1063,7 @@ function handleSorterTargetChoice(targetShadow) {
     }
 
     targetShadow.classList.add("is-wrong");
+    window.AzbukaAudio?.playEffect("wrong");
     setTimeout(() => targetShadow.classList.remove("is-wrong"), 620);
 }
 
@@ -1045,7 +1076,8 @@ function beginSorterDrag(event) {
     sorterDrag = {
         pointerId: event.pointerId,
         startX: event.clientX,
-        startY: event.clientY
+        startY: event.clientY,
+        hasMoved: false
     };
     sorterLetter.setPointerCapture?.(event.pointerId);
     sorterLetter.classList.add("is-dragging");
@@ -1059,6 +1091,10 @@ function moveSorterDrag(event) {
     const offsetX = event.clientX - sorterDrag.startX;
     const offsetY = event.clientY - sorterDrag.startY;
 
+    if (Math.hypot(offsetX, offsetY) >= 8) {
+        sorterDrag.hasMoved = true;
+    }
+
     sorterLetter.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(1.08)`;
 }
 
@@ -1071,13 +1107,14 @@ function finishSorterDrag(event) {
 
     sorterLetter.releasePointerCapture?.(event.pointerId);
 
-    if (targetShadow?.dataset.correct === "true") {
+    if (sorterDrag.hasMoved && targetShadow?.dataset.correct === "true") {
         handleSorterTargetChoice(targetShadow);
         return;
     }
 
-    if (targetShadow) {
+    if (sorterDrag.hasMoved && targetShadow) {
         targetShadow.classList.add("is-wrong");
+        window.AzbukaAudio?.playEffect("wrong");
         setTimeout(() => targetShadow.classList.remove("is-wrong"), 620);
     }
 
@@ -1116,7 +1153,6 @@ function showSorterRound(letterData) {
         shadow.textContent = letter;
         shadow.dataset.correct = String(letter === letterData.letter);
         shadow.setAttribute("aria-label", `Тень буквы ${letter}`);
-        shadow.addEventListener("click", () => handleSorterTargetChoice(shadow));
         const shadowRow = index < 4 ? sorterTopShadows : sorterBottomShadows;
 
         shadowRow?.appendChild(shadow);
@@ -1217,6 +1253,7 @@ function completeConnectLineGame() {
     repeatRoundButton.textContent = "Повторить";
     repeatRoundButton.classList.remove("hidden");
     backToLettersButton?.classList.remove("hidden");
+    window.AzbukaAudio?.playEffect("win");
     showCelebrationPhrase(getCelebrationPhrase());
 }
 
@@ -1241,11 +1278,14 @@ function finishConnection(event) {
 
         if (connectMatches.length === 2) {
             completeConnectLineGame();
+        } else {
+            window.AzbukaAudio?.playEffect("correct");
         }
 
         return;
     }
 
+    window.AzbukaAudio?.playEffect("wrong");
     cancelActiveConnection(true);
 }
 
@@ -1658,6 +1698,7 @@ function resolveBusDestination() {
     }
 
     selectedRoute.destination.classList.add("is-wrong");
+    window.AzbukaAudio?.playEffect("wrong");
     busVehicle.classList.add("needs-more-road");
     setTimeout(() => {
         selectedRoute.destination.classList.remove("is-wrong");
@@ -1682,6 +1723,7 @@ function completeBusGame(destination) {
     repeatRoundButton.textContent = "Повторить";
     repeatRoundButton.classList.remove("hidden");
     backToLettersButton?.classList.remove("hidden");
+    window.AzbukaAudio?.playEffect("win");
     showCelebrationPhrase(getCelebrationPhrase());
 }
 
@@ -1745,16 +1787,21 @@ function handleFindObjectCardClick(card, item) {
         if (findObjectCorrectFound >= 2 && !findObjectRoundCompleted) {
             findObjectRoundCompleted = true;
             completeFindObjectGame();
+        } else {
+            window.AzbukaAudio?.playEffect("correct");
         }
 
         return;
     }
 
     card.classList.add("is-wrong");
+    window.AzbukaAudio?.playEffect("wrong");
     setTimeout(() => card.classList.remove("is-wrong"), 620);
 }
 
 function completeFindObjectGame() {
+    window.AzbukaAudio?.playEffect("win");
+
     if (findObjectRoundCompleted && selectedLetter) {
         recordMiniGameProgress(selectedLetter.letter, "game2");
     }
@@ -1940,6 +1987,7 @@ function createExplosion(balloon) {
 }
 
 function finishRound() {
+    window.AzbukaAudio?.playEffect("win");
     recordMiniGameCompletion(selectedLetter.letter);
     stopBalloonAnimation();
     balloons.innerHTML = "";
@@ -1994,6 +2042,10 @@ function handleBalloonClick(balloon, letter) {
         balloon.style.transition = "transform 300ms cubic-bezier(0.2, 0.8, 0.3, 1), opacity 260ms ease-out";
         createExplosion(balloon);
 
+        if (correctBalloonsLeft > 1) {
+            window.AzbukaAudio?.playEffect("correct");
+        }
+
         const rotation = Math.round(Math.random() * 50 - 25);
 
         requestAnimationFrame(() => {
@@ -2014,6 +2066,7 @@ function handleBalloonClick(balloon, letter) {
     }
 
     balloon.style.transform = "translateY(-8px) scale(1.1)";
+    window.AzbukaAudio?.playEffect("wrong");
     setTimeout(() => {
         balloon.style.transform = "";
     }, 200);
@@ -2127,8 +2180,18 @@ alphabet.forEach((letterData) => {
 });
 
 updateProgressUI();
+updateSoundToggle();
+
+letterImage?.addEventListener("click", () => {
+    window.AzbukaAudio?.playWord(displayedLetterWord?.audio);
+});
+
+wordsBlock?.addEventListener("click", () => {
+    window.AzbukaAudio?.playWord(displayedLetterWord?.audio);
+});
 
 document.getElementById("startButton").addEventListener("click", () => {
+    window.AzbukaAudio?.playEffect("celebration");
     showScreen("lettersScreen");
 });
 
@@ -2143,6 +2206,13 @@ document.getElementById("backLettersButton").addEventListener("click", () => {
 if (settingsButton) {
     settingsButton.addEventListener("click", () => {
         openSettingsModal();
+    });
+}
+
+if (soundToggleButton) {
+    soundToggleButton.addEventListener("click", () => {
+        window.AzbukaAudio?.setEnabled(!window.AzbukaAudio.isEnabled());
+        updateSoundToggle();
     });
 }
 
@@ -2180,35 +2250,41 @@ if (confirmResetButton) {
 }
 
 document.getElementById("playGameButton").addEventListener("click", () => {
+    window.AzbukaAudio?.playEffect("click");
     showFindObjectRound(selectedLetter);
 });
 
 if (playBalloonsGameButton) {
     playBalloonsGameButton.addEventListener("click", () => {
+        window.AzbukaAudio?.playEffect("click");
         showBalloonGame(selectedLetter);
     });
 }
 
 if (playSorterGameButton) {
     playSorterGameButton.addEventListener("click", () => {
+        window.AzbukaAudio?.playEffect("click");
         showSorterRound(selectedLetter);
     });
 }
 
 if (playConnectGameButton) {
     playConnectGameButton.addEventListener("click", () => {
+        window.AzbukaAudio?.playEffect("click");
         showConnectLineRound(selectedLetter);
     });
 }
 
 if (playBusGameButton) {
     playBusGameButton.addEventListener("click", () => {
+        window.AzbukaAudio?.playEffect("click");
         showBusRound(selectedLetter);
     });
 }
 
 if (repeatRoundButton) {
     repeatRoundButton.addEventListener("click", () => {
+        window.AzbukaAudio?.playEffect("click");
         if (activeGameMode === "connectLines") {
             showConnectLineRound(selectedLetter);
         } else if (activeGameMode === "sorter") {
