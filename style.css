@@ -4,6 +4,13 @@
     box-sizing: border-box;
 }
 
+button:not(.sorterLetter):not(.connectCenterLetter):not(.busVehicle),
+.letterCard,
+.letterImage,
+.wordCard {
+    touch-action: manipulation;
+}
+
 body {
     font-family: Arial, Helvetica, sans-serif;
     background: linear-gradient(180deg, #87CEEB, #EAF8FF);
@@ -1569,5 +1576,135 @@ body {
 
     .gameChoicePanel {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 320px) and (max-width: 430px) {
+    #lettersScreen {
+        --letter-cell-size: clamp(58px, min(17vw, 10.5vh), 66px);
+        height: 100svh;
+        min-height: 100svh;
+        padding: 5px 1px;
+        overflow-x: hidden;
+        overflow-y: hidden;
+    }
+
+    #lettersScreen .header {
+        position: static;
+        min-height: 44px;
+        margin-bottom: 4px;
+        padding-bottom: 0;
+        gap: 8px;
+        background: transparent;
+        backdrop-filter: none;
+    }
+
+    #lettersScreen .header h2 {
+        font-size: clamp(20px, 6vw, 24px);
+    }
+
+    #lettersScreen .backButton,
+    #lettersScreen .settingsButton {
+        width: 44px;
+        height: 44px;
+        flex: 0 0 44px;
+    }
+
+    #lettersScreen .overallProgress {
+        gap: 4px;
+        margin-bottom: 5px;
+        padding: 4px 8px;
+        border-radius: 12px;
+    }
+
+    #lettersScreen .overallProgressText {
+        font-size: 14px;
+    }
+
+    #lettersScreen .overallProgressTrack {
+        height: 8px;
+        border-width: 2px;
+    }
+
+    #lettersScreen .lettersGrid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        width: min(100%, 374px);
+        gap: clamp(2px, .8vw, 4px);
+        justify-items: center;
+    }
+
+    #lettersScreen .letterCardWrapper,
+    #lettersScreen .letterCard {
+        width: var(--letter-cell-size);
+        height: var(--letter-cell-size);
+        min-height: 0;
+        border-radius: 50%;
+    }
+
+    #lettersScreen .letterCard {
+        font-size: clamp(31px, 9vw, 38px);
+    }
+
+    #lettersScreen .letterProgressRing {
+        inset: -1px;
+        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 0);
+        mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 0);
+    }
+
+    #lettersScreen .letterCardWrapper:nth-last-child(3) {
+        grid-column: 2;
+    }
+
+    .sorterDragZone {
+        min-height: clamp(94px, 27vw, 112px);
+    }
+
+    .sorterLetter {
+        width: clamp(76px, 22vw, 92px);
+        font-size: clamp(56px, 16vw, 70px);
+    }
+
+    .balloon {
+        width: clamp(58px, 18vw, 76px);
+        height: clamp(58px, 18vw, 76px);
+        font-size: clamp(31px, 10vw, 40px);
+    }
+
+    .balloons {
+        height: min(65vh, 580px);
+    }
+
+    #letterScreen .gameChoicePanel {
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 9px;
+    }
+}
+
+@media (min-width: 521px) {
+    .busDestinations {
+        inset: 14px 14px 14px auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 12px;
+        width: 118px;
+    }
+
+    .busDestination {
+        position: relative;
+        top: auto !important;
+        left: auto !important;
+        width: 118px;
+        padding: 6px;
+        transform: none;
+    }
+
+    .busDestination img {
+        height: 70px;
+    }
+
+    .busDestination.is-reached {
+        transform: scale(1.04);
     }
 }

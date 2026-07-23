@@ -357,7 +357,7 @@ const gameChoiceButtons = document.querySelectorAll(".gameChoiceButton");
 const screens = document.querySelectorAll(".screen");
 const balloonColors = ["#ff6b6b", "#4dabf7", "#51cf66", "#ff922b", "#9775fa"];
 const celebrationPhrases = ["Молодец!", "Здорово!", "Отлично!", "Супер!", "Умница!"];
-const balloonSize = 90;
+const desktopBalloonSize = 90;
 const totalLettersCount = alphabet.length;
 let correctBalloonsLeft = 0;
 let lastCelebrationPhrase = "";
@@ -728,9 +728,15 @@ function requestImage(imagePath, bypassCache = false) {
         const image = new Image();
 
         image.addEventListener("load", () => {
-            imageCache.set(imagePath, image);
-            imageRequests.delete(imagePath);
-            resolve(image);
+            const decodeImage = typeof image.decode === "function"
+                ? image.decode().catch(() => {})
+                : Promise.resolve();
+
+            decodeImage.then(() => {
+                imageCache.set(imagePath, image);
+                imageRequests.delete(imagePath);
+                resolve(image);
+            });
         }, { once: true });
         image.addEventListener("error", () => {
             imageRequests.delete(imagePath);
@@ -741,6 +747,14 @@ function requestImage(imagePath, bypassCache = false) {
 
     imageRequests.set(imagePath, imageRequest);
     return imageRequest;
+}
+
+function preloadWordImages(words) {
+    words.forEach((word) => {
+        if (word?.image) {
+            requestImage(word.image).catch(() => {});
+        }
+    });
 }
 
 function scheduleImageRetry(word, requestId) {
@@ -928,6 +942,7 @@ function showFindObjectRound(letterData) {
     setActiveGameChoice("findObjects");
     selectedLetter = letterData;
     findObjectRoundItems = buildFindObjectRound(letterData);
+    preloadWordImages(findObjectRoundItems);
     findObjectCorrectFound = 0;
     findObjectRoundCompleted = false;
     document.querySelector(".gameTitle").textContent = "";
@@ -1326,6 +1341,7 @@ function showConnectLineRound(letterData) {
     setActiveGameChoice("connectLines");
     selectedLetter = letterData;
     connectRoundItems = buildConnectLineRound(letterData);
+    preloadWordImages(connectRoundItems.map((item) => item.word));
     connectMatches = [];
     connectRoundCompleted = false;
     cancelActiveConnection();
@@ -1731,6 +1747,7 @@ function showBusRound(letterData) {
     const options = buildBusRound(letterData);
     const routes = getNextBusRouteSet();
 
+    preloadWordImages(options.map((option) => option.word));
     activeGameMode = "bus";
     setActiveGameChoice("bus");
     selectedLetter = letterData;
@@ -1911,16 +1928,48 @@ function stopBalloonAnimation() {
     movingBalloons = [];
 }
 
+function getBalloonSize() {
+    if (window.matchMedia("(min-width: 320px) and (max-width: 430px)").matches) {
+        return Math.min(76, Math.max(58, window.innerWidth * 0.18));
+    }
+
+    return desktopBalloonSize;
+}
+
+function createMobileBalloonPositions(count, size, fieldWidth, fieldHeight) {
+    const columns = Math.max(2, Math.min(count, Math.floor(fieldWidth / (size * 1.05))));
+    const rows = Math.ceil(count / columns);
+    const maxLeft = Math.max(0, fieldWidth - size);
+    const maxTop = Math.max(0, fieldHeight - size);
+    const horizontalStep = columns > 1 ? maxLeft / (columns - 1) : 0;
+    const verticalStep = rows > 1 ? maxTop / (rows - 1) : 0;
+    const positions = [];
+
+    for (let index = 0; index < count; index += 1) {
+        const column = index % columns;
+        const row = Math.floor(index / columns);
+        const rowItemCount = Math.min(columns, count - row * columns);
+        const rowOffset = rowItemCount < columns ? (columns - rowItemCount) * horizontalStep / 2 : 0;
+
+        positions.push({
+            left: Math.min(maxLeft, rowOffset + column * horizontalStep),
+            top: row * verticalStep
+        });
+    }
+
+    return shuffleArray(positions);
+}
+
 function moveBalloons(currentTime) {
     if (lastAnimationTime === null) {
         lastAnimationTime = currentTime;
     }
 
     const timePassed = Math.min((currentTime - lastAnimationTime) / 1000, 0.05);
-    const maxLeft = Math.max(0, balloons.clientWidth - balloonSize);
-    const maxTop = Math.max(0, balloons.clientHeight - balloonSize);
-
     movingBalloons.forEach((balloonData) => {
+        const maxLeft = Math.max(0, balloons.clientWidth - balloonData.size);
+        const maxTop = Math.max(0, balloons.clientHeight - balloonData.size);
+
         balloonData.left += balloonData.speedX * timePassed;
         balloonData.top += balloonData.speedY * timePassed;
 
@@ -1951,8 +2000,9 @@ function startBalloonAnimation() {
 }
 
 function createExplosion(balloon) {
-    const centerLeft = parseFloat(balloon.style.left) + balloonSize / 2;
-    const centerTop = parseFloat(balloon.style.top) + balloonSize / 2;
+    const size = balloon.offsetWidth || getBalloonSize();
+    const centerLeft = parseFloat(balloon.style.left) + size / 2;
+    const centerTop = parseFloat(balloon.style.top) + size / 2;
     const particleCount = 8 + Math.floor(Math.random() * 5);
 
     for (let index = 0; index < particleCount; index += 1) {
@@ -2111,8 +2161,13 @@ function createGameRound() {
         ...getRandomWrongLetters(7)
     ]);
 
-    const maxLeft = Math.max(0, balloons.clientWidth - balloonSize);
-    const maxTop = Math.max(0, balloons.clientHeight - balloonSize);
+    const size = getBalloonSize();
+    const maxLeft = Math.max(0, balloons.clientWidth - size);
+    const maxTop = Math.max(0, balloons.clientHeight - size);
+    const usesMobileLayout = window.matchMedia("(min-width: 320px) and (max-width: 430px)").matches;
+    const mobilePositions = usesMobileLayout
+        ? createMobileBalloonPositions(roundLetters.length, size, balloons.clientWidth, balloons.clientHeight)
+        : null;
 
     roundLetters.forEach((letter, index) => {
         const balloon = document.createElement("button");
@@ -2120,8 +2175,8 @@ function createGameRound() {
         balloon.type = "button";
         balloon.textContent = letter;
         balloon.style.background = balloonColors[index % balloonColors.length];
-        const left = Math.random() * maxLeft;
-        const top = Math.random() * maxTop;
+        const left = mobilePositions?.[index].left ?? Math.random() * maxLeft;
+        const top = mobilePositions?.[index].top ?? Math.random() * maxTop;
         const direction = Math.random() * Math.PI * 2;
         const speed = 10 + Math.random() * 18;
         const drift = 0.4 + Math.random() * 0.8;
@@ -2134,6 +2189,7 @@ function createGameRound() {
             element: balloon,
             left,
             top,
+            size,
             speedX: Math.cos(direction) * speed * drift,
             speedY: Math.sin(direction) * speed * (0.7 + Math.random() * 0.6)
         });
@@ -2167,6 +2223,8 @@ alphabet.forEach((letterData) => {
     letterProgressRings.set(letterData.letter, ring);
     updateLetterCardProgress(letterData.letter);
     card.addEventListener("click", () => {
+        preloadWordImages(letterData.words);
+
         if (letterSelectionTimeout !== null) {
             return;
         }
@@ -2191,6 +2249,7 @@ wordsBlock?.addEventListener("click", () => {
 });
 
 document.getElementById("startButton").addEventListener("click", () => {
+    window.AzbukaAudio?.prepare();
     window.AzbukaAudio?.playEffect("celebration");
     showScreen("lettersScreen");
 });

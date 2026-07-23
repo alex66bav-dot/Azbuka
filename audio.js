@@ -7,6 +7,14 @@
         words: "assets/audio/words",
         effects: "assets/audio/effects"
     });
+    const effectNames = ["click", "correct", "wrong", "win", "celebration"];
+    const preloadedEffects = new Map(effectNames.map((name) => {
+        const audio = new Audio(`${audioRoots.effects}/${name}.mp3`);
+
+        audio.preload = "auto";
+        audio.load();
+        return [name, audio];
+    }));
     let voiceAudio = null;
     const activeEffects = new Set();
 
@@ -50,6 +58,13 @@
     }
 
     function stopEffects() {
+        const clickAudio = preloadedEffects.get("click");
+
+        if (clickAudio) {
+            clickAudio.pause();
+            clickAudio.currentTime = 0;
+        }
+
         activeEffects.forEach((audio) => {
             audio.pause();
             audio.removeAttribute("src");
@@ -75,6 +90,25 @@
 
     function playEffect(name) {
         if (!soundEnabled || !name) {
+            return;
+        }
+
+        if (name === "click") {
+            const clickAudio = preloadedEffects.get("click");
+
+            if (!clickAudio) {
+                return;
+            }
+
+            clickAudio.pause();
+            clickAudio.currentTime = 0;
+
+            try {
+                clickAudio.play()?.catch(() => {});
+            } catch {
+                // A mobile browser can reject playback until its first user gesture.
+            }
+
             return;
         }
 
@@ -106,6 +140,7 @@
         roots: audioRoots,
         isEnabled: () => soundEnabled,
         setEnabled,
+        prepare: () => preloadedEffects.forEach((audio) => audio.load()),
         playLetter: (fileName) => playVoice(fileName ? `${audioRoots.letters}/${fileName}.mp3` : null),
         playWord: (fileName) => playVoice(fileName ? `${audioRoots.words}/${fileName}.mp3` : null),
         playEffect,
