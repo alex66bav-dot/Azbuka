@@ -316,6 +316,7 @@ const bigLetter = document.getElementById("bigLetter");
 const letterTitle = document.getElementById("letterTitle");
 const letterImage = document.getElementById("letterImage");
 const wordsBlock = document.getElementById("wordsBlock");
+const nextWordButton = document.getElementById("nextWordButton");
 const targetLetter = document.getElementById("targetLetter");
 const balloons = document.getElementById("balloons");
 const gameScreenTitle = document.getElementById("gameScreenTitle");
@@ -809,18 +810,41 @@ function showWordImage(word) {
     loadWordImage(word, requestId, loadingIndicator);
 }
 
+function displayLetterWord(word) {
+    displayedLetterWord = word;
+    wordsBlock.replaceChildren();
+
+    const wordCard = document.createElement("div");
+
+    wordCard.className = "wordCard";
+    wordCard.textContent = word.text;
+    wordsBlock.appendChild(wordCard);
+    showWordImage(word);
+}
+
+function showNextLetterWord() {
+    if (!selectedLetter?.words.length) {
+        return;
+    }
+
+    const wordIndex = wordIndexes[selectedLetter.letter];
+    const word = selectedLetter.words[wordIndex];
+
+    wordIndexes[selectedLetter.letter] = (wordIndex + 1) % selectedLetter.words.length;
+    displayLetterWord(word);
+    window.AzbukaAudio?.playWord(word.audio);
+}
+
 function showLetter(letterData) {
     selectedLetter = letterData;
     const wordIndex = wordIndexes[selectedLetter.letter];
     const word = selectedLetter.words[wordIndex];
-    displayedLetterWord = word;
 
     wordIndexes[selectedLetter.letter] = (wordIndex + 1) % selectedLetter.words.length;
     bigLetter.textContent = selectedLetter.letter;
     letterTitle.textContent = `Буква ${selectedLetter.letter}`;
-    wordsBlock.innerHTML = `<div class="wordCard">${word.text}</div>`;
     setActiveGameChoice(activeGameMode);
-    showWordImage(word);
+    displayLetterWord(word);
     showScreen("letterScreen");
     window.AzbukaAudio?.playLetter(getLetterFolderName(letterData.letter));
 }
@@ -2246,6 +2270,11 @@ letterImage?.addEventListener("click", () => {
 
 wordsBlock?.addEventListener("click", () => {
     window.AzbukaAudio?.playWord(displayedLetterWord?.audio);
+});
+
+nextWordButton?.addEventListener("click", () => {
+    window.AzbukaAudio?.playEffect("click");
+    showNextLetterWord();
 });
 
 document.getElementById("startButton").addEventListener("click", () => {

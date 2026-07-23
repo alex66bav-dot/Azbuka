@@ -616,6 +616,38 @@ body {
     box-shadow: 0 8px 18px rgba(86, 70, 133, .13);
 }
 
+.nextWordButton {
+    display: block;
+    width: min(360px, 100%);
+    min-height: 56px;
+    margin: 14px auto 0;
+    padding: 12px 22px;
+    border: 3px solid rgba(255, 255, 255, .88);
+    border-radius: 20px;
+    background: linear-gradient(135deg, #ff9f43, #ff7b54);
+    color: white;
+    font-size: clamp(20px, 3vw, 25px);
+    font-weight: 800;
+    line-height: 1.15;
+    cursor: pointer;
+    box-shadow: 0 9px 18px rgba(211, 103, 54, .25);
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.nextWordButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px rgba(211, 103, 54, .32);
+}
+
+.nextWordButton:active {
+    transform: translateY(1px);
+}
+
+.nextWordButton:focus-visible {
+    outline: 4px solid rgba(255, 207, 51, .72);
+    outline-offset: 3px;
+}
+
 #letterScreen {
     min-height: 100vh;
     max-height: 100svh;
@@ -736,6 +768,29 @@ body {
     transform: translateY(1px);
 }
 
+@media (min-width: 901px) and (max-height: 800px) {
+    .bigLetter {
+        width: 132px;
+        height: 132px;
+        margin-top: 4px;
+        margin-bottom: 12px;
+        font-size: 104px;
+    }
+
+    .letterImage {
+        height: min(39svh, 300px);
+        margin-bottom: 12px;
+    }
+
+    .wordCard {
+        padding-block: 10px;
+    }
+
+    .nextWordButton {
+        margin-top: 10px;
+    }
+}
+
 @media (max-width: 520px) {
     #letterScreen .header {
         gap: 8px;
@@ -760,6 +815,12 @@ body {
 
     .wordCard {
         padding: 12px 18px;
+    }
+
+    .nextWordButton {
+        min-height: 52px;
+        margin-top: 10px;
+        border-radius: 18px;
     }
 }
 
