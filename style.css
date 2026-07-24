@@ -142,6 +142,18 @@ body {
     transition: width 300ms ease;
 }
 
+.demoNotice {
+    margin: -4px auto 8px;
+    color: #4f5f8c;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.demoNotice.hidden {
+    display: none;
+}
+
 .lettersGrid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -232,6 +244,38 @@ body {
     transform: scale(.96);
 }
 
+.letterCard.is-locked {
+    color: rgba(79, 95, 140, .72);
+    cursor: not-allowed;
+    background: linear-gradient(145deg, rgba(255, 255, 255, .82), rgba(222, 229, 241, .9));
+    box-shadow: 0 5px 12px rgba(69, 101, 152, .11);
+}
+
+.letterCard.is-locked:hover,
+.letterCard.is-locked:active {
+    transform: none;
+    background: linear-gradient(145deg, rgba(255, 255, 255, .82), rgba(222, 229, 241, .9));
+    box-shadow: 0 5px 12px rgba(69, 101, 152, .11);
+}
+
+.letterLock {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    z-index: 4;
+    display: grid;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    border: 2px solid rgba(255, 255, 255, .9);
+    border-radius: 50%;
+    background: #6d7c9f;
+    font-size: 11px;
+    line-height: 1;
+    pointer-events: none;
+    box-shadow: 0 3px 7px rgba(46, 74, 122, .2);
+}
+
 #lettersScreen {
     position: relative;
     max-height: 100svh;
@@ -296,6 +340,72 @@ body {
 
 .settingsOverlay.hidden {
     display: none;
+}
+
+.fullVersionOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(46, 74, 122, .42);
+}
+
+.fullVersionOverlay.hidden {
+    display: none;
+}
+
+.fullVersionModal {
+    position: relative;
+    width: min(400px, 100%);
+    padding: 24px 20px 20px;
+    border: 2px solid rgba(255, 255, 255, .82);
+    border-radius: 24px;
+    background: white;
+    text-align: center;
+    box-shadow: 0 18px 42px rgba(31, 53, 92, .28);
+}
+
+.fullVersionModal h3 {
+    margin: 0 28px 10px;
+    color: #385b7a;
+    font-size: 24px;
+}
+
+.fullVersionModal p {
+    margin: 0 0 18px;
+    color: #5e7197;
+    font-size: 16px;
+    line-height: 1.45;
+}
+
+.fullVersionCloseButton {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 50%;
+    background: #edf3ff;
+    color: #4f5f8c;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.fullVersionConfirmButton {
+    min-width: 140px;
+    border: none;
+    border-radius: 14px;
+    padding: 11px 18px;
+    background: #4dabf7;
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
 }
 
 .settingsModal {
@@ -1687,6 +1797,12 @@ body {
         border-width: 2px;
     }
 
+    #lettersScreen .demoNotice {
+        margin: -2px auto 3px;
+        font-size: 11px;
+        line-height: 1;
+    }
+
     #lettersScreen .lettersGrid {
         grid-template-columns: repeat(5, minmax(0, 1fr));
         width: min(100%, 374px);
@@ -1710,6 +1826,15 @@ body {
         inset: -1px;
         -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 0);
         mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 0);
+    }
+
+    #lettersScreen .letterLock {
+        right: 0;
+        bottom: 0;
+        width: 18px;
+        height: 18px;
+        border-width: 1px;
+        font-size: 9px;
     }
 
     #lettersScreen .letterCardWrapper:nth-last-child(3) {

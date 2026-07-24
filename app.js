@@ -307,6 +307,29 @@ const alphabet = [
     { letter: "Я", words: createWords("Я", ["Яблоко", "Ягода", "Якорь", "Ящерица", "Яйцо"]) }
 ];
 
+const FREE_LETTERS = new Set(["А", "Б", "В"]);
+const GITHUB_PAGES_HOSTNAME = "alex66bav-dot.github.io";
+
+function isDemoMode() {
+    if (window.location.hostname === GITHUB_PAGES_HOSTNAME) {
+        return true;
+    }
+
+    return new URLSearchParams(window.location.search).get("demo") === "1";
+}
+
+function hasFullAccess() {
+    return !isDemoMode();
+}
+
+function isLetterUnlocked(letter) {
+    return hasFullAccess() || FREE_LETTERS.has(letter);
+}
+
+function getAccessibleAlphabet() {
+    return alphabet.filter((letterData) => isLetterUnlocked(letterData.letter));
+}
+
 let selectedLetter = null;
 let displayedLetterWord = null;
 const wordIndexes = Object.fromEntries(alphabet.map((letterData) => [letterData.letter, 0]));
@@ -328,6 +351,10 @@ const progressText = document.getElementById("progressText");
 const progressBarFill = document.getElementById("progressBarFill");
 const settingsButton = document.getElementById("settingsButton");
 const settingsOverlay = document.getElementById("settingsOverlay");
+const demoNotice = document.getElementById("demoNotice");
+const fullVersionOverlay = document.getElementById("fullVersionOverlay");
+const closeFullVersionButton = document.getElementById("closeFullVersionButton");
+const confirmFullVersionButton = document.getElementById("confirmFullVersionButton");
 const showResetConfirmButton = document.getElementById("showResetConfirmButton");
 const resetConfirmBlock = document.getElementById("resetConfirmBlock");
 const cancelResetButton = document.getElementById("cancelResetButton");
@@ -545,6 +572,10 @@ function setCompletedGames(letter, completedGames) {
 }
 
 function recordMiniGameProgress(letter, gameId) {
+    if (!isLetterUnlocked(letter)) {
+        return;
+    }
+
     const nextCompletedGames = new Set(getCompletedGames(letter));
 
     if (nextCompletedGames.has(gameId)) {
@@ -576,6 +607,14 @@ function createProgressRingBackground(letter) {
 function updateLetterCardProgress(letter) {
     const card = letterCards.get(letter);
     const progressRing = letterProgressRings.get(letter);
+
+    if (!isLetterUnlocked(letter)) {
+        progressRing?.querySelectorAll(".letterProgressSegment").forEach((segment) => {
+            segment.classList.remove("is-complete");
+        });
+        card?.classList.remove("is-completed");
+        return;
+    }
 
     if (progressRing) {
         createProgressRingBackground(letter);
@@ -629,6 +668,24 @@ function openSettingsModal() {
     }
 }
 
+function openFullVersionModal() {
+    fullVersionOverlay?.classList.remove("hidden");
+    confirmFullVersionButton?.focus();
+}
+
+function closeFullVersionModal() {
+    fullVersionOverlay?.classList.add("hidden");
+}
+
+function ensureLetterAccess(letterData) {
+    if (letterData && isLetterUnlocked(letterData.letter)) {
+        return true;
+    }
+
+    openFullVersionModal();
+    return false;
+}
+
 function updateSoundToggle() {
     if (!soundToggleButton || !window.AzbukaAudio) {
         return;
@@ -656,6 +713,10 @@ function showResetProgressConfirmation() {
 }
 
 function showScreen(screenId) {
+    if ((screenId === "letterScreen" || screenId === "gameScreen") && !ensureLetterAccess(selectedLetter)) {
+        return;
+    }
+
     if (screenId !== "letterScreen") {
         window.AzbukaAudio?.stopVoice();
     }
@@ -836,6 +897,10 @@ function showNextLetterWord() {
 }
 
 function showLetter(letterData) {
+    if (!ensureLetterAccess(letterData)) {
+        return;
+    }
+
     selectedLetter = letterData;
     const wordIndex = wordIndexes[selectedLetter.letter];
     const word = selectedLetter.words[wordIndex];
@@ -909,7 +974,7 @@ function buildFindObjectRound(letterData) {
     }
 
     const correctWords = shuffleArray(letterData.words).slice(0, 2);
-    const otherWords = shuffleArray(alphabet
+    const otherWords = shuffleArray(getAccessibleAlphabet()
         .filter((candidate) => candidate.letter !== letterData.letter)
         .flatMap((candidate) => candidate.words)
         .map((word) => ({ ...word }))
@@ -962,6 +1027,10 @@ function resetCelebrationOverlay() {
 }
 
 function showFindObjectRound(letterData) {
+    if (!ensureLetterAccess(letterData)) {
+        return;
+    }
+
     activeGameMode = "findObjects";
     setActiveGameChoice("findObjects");
     selectedLetter = letterData;
@@ -1161,6 +1230,10 @@ function finishSorterDrag(event) {
 }
 
 function showSorterRound(letterData) {
+    if (!ensureLetterAccess(letterData)) {
+        return;
+    }
+
     activeGameMode = "sorter";
     setActiveGameChoice("sorter");
     selectedLetter = letterData;
@@ -1220,7 +1293,7 @@ function buildConnectLineRound(letterData) {
     }));
     const wrongWordPool = usesSpecialWords
         ? sourceItems.filter((item) => item.specialCharacter !== letterData.letter)
-        : alphabet
+        : getAccessibleAlphabet()
             .filter((item) => item.letter !== letterData.letter)
             .flatMap((item) => item.words);
     const wrongItems = shuffleArray(wrongWordPool).slice(0, 6).map((wordItem, index) => ({
@@ -1361,6 +1434,10 @@ function moveConnection(event) {
 }
 
 function showConnectLineRound(letterData) {
+    if (!ensureLetterAccess(letterData)) {
+        return;
+    }
+
     activeGameMode = "connectLines";
     setActiveGameChoice("connectLines");
     selectedLetter = letterData;
@@ -1490,7 +1567,7 @@ function buildBusRound(letterData) {
     }
 
     const correctWord = getNextBusWord(letterData);
-    const wrongWords = shuffleArray(alphabet
+    const wrongWords = shuffleArray(getAccessibleAlphabet()
         .filter((candidate) => candidate.letter !== letterData.letter)
         .flatMap((candidate) => candidate.words)
     ).slice(0, 2);
@@ -1768,6 +1845,10 @@ function completeBusGame(destination) {
 }
 
 function showBusRound(letterData) {
+    if (!ensureLetterAccess(letterData)) {
+        return;
+    }
+
     const options = buildBusRound(letterData);
     const routes = getNextBusRouteSet();
 
@@ -2147,6 +2228,10 @@ function handleBalloonClick(balloon, letter) {
 }
 
 function showBalloonGame(letterData) {
+    if (!ensureLetterAccess(letterData)) {
+        return;
+    }
+
     activeGameMode = "balloons";
     setActiveGameChoice("balloons");
     selectedLetter = letterData;
@@ -2226,11 +2311,24 @@ alphabet.forEach((letterData) => {
     const wrapper = document.createElement("div");
     const ring = document.createElement("div");
     const card = document.createElement("div");
+    const isUnlocked = isLetterUnlocked(letterData.letter);
 
     wrapper.className = "letterCardWrapper";
     ring.className = "letterProgressRing";
     card.className = "letterCard";
     card.textContent = letterData.letter;
+
+    if (!isUnlocked) {
+        const lock = document.createElement("span");
+
+        wrapper.classList.add("is-locked");
+        card.classList.add("is-locked");
+        card.setAttribute("aria-label", `${letterData.letter}, доступна в полной версии`);
+        lock.className = "letterLock";
+        lock.textContent = "🔒";
+        lock.setAttribute("aria-hidden", "true");
+        wrapper.appendChild(lock);
+    }
 
     miniGameIds.forEach((gameId, index) => {
         const segment = document.createElement("div");
@@ -2247,6 +2345,12 @@ alphabet.forEach((letterData) => {
     letterProgressRings.set(letterData.letter, ring);
     updateLetterCardProgress(letterData.letter);
     card.addEventListener("click", () => {
+        window.AzbukaAudio?.playEffect("click");
+
+        if (!ensureLetterAccess(letterData)) {
+            return;
+        }
+
         preloadWordImages(letterData.words);
 
         if (letterSelectionTimeout !== null) {
@@ -2261,6 +2365,7 @@ alphabet.forEach((letterData) => {
     lettersGrid.appendChild(wrapper);
 });
 
+demoNotice?.classList.toggle("hidden", !isDemoMode());
 updateProgressUI();
 updateSoundToggle();
 
@@ -2317,6 +2422,20 @@ if (settingsOverlay) {
         }
     });
 }
+
+closeFullVersionButton?.addEventListener("click", closeFullVersionModal);
+confirmFullVersionButton?.addEventListener("click", closeFullVersionModal);
+fullVersionOverlay?.addEventListener("click", (event) => {
+    if (event.target === fullVersionOverlay) {
+        closeFullVersionModal();
+    }
+});
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !fullVersionOverlay?.classList.contains("hidden")) {
+        closeFullVersionModal();
+    }
+});
 
 if (showResetConfirmButton) {
     showResetConfirmButton.addEventListener("click", () => {
@@ -2397,7 +2516,9 @@ document.getElementById("backLetterButton").addEventListener("click", () => {
     busDrive = null;
     clearTimeout(nextRoundTimeout);
     stopBalloonAnimation();
-    showScreen("letterScreen");
+    if (ensureLetterAccess(selectedLetter)) {
+        showScreen("letterScreen");
+    }
 });
 
 window.addEventListener("resize", () => {

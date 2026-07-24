@@ -52,6 +52,8 @@
             </div>
         </div>
 
+        <p id="demoNotice" class="demoNotice hidden">Демо: доступны А, Б и В</p>
+
         <div id="lettersGrid" class="lettersGrid">
 
         </div>
@@ -78,6 +80,15 @@
             </div>
 
             <button id="closeSettingsButton" class="closeSettingsButton" type="button">Закрыть</button>
+        </div>
+    </div>
+
+    <div id="fullVersionOverlay" class="fullVersionOverlay hidden">
+        <div class="fullVersionModal" role="dialog" aria-modal="true" aria-labelledby="fullVersionTitle" aria-describedby="fullVersionText">
+            <button id="closeFullVersionButton" class="fullVersionCloseButton" type="button" aria-label="Закрыть">×</button>
+            <h3 id="fullVersionTitle">Полная версия</h3>
+            <p id="fullVersionText">Эта буква доступна в полной версии приложения</p>
+            <button id="confirmFullVersionButton" class="fullVersionConfirmButton" type="button">Понятно</button>
         </div>
     </div>
 
