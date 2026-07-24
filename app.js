@@ -2388,6 +2388,62 @@ document.getElementById("startButton").addEventListener("click", () => {
     showScreen("lettersScreen");
 });
 
+const installButton = document.getElementById("installButton");
+let deferredInstallPrompt = null;
+
+function isInstalledApp() {
+    return window.matchMedia("(display-mode: standalone)").matches
+        || window.navigator.standalone === true;
+}
+
+function hideInstallButton() {
+    installButton?.classList.add("hidden");
+}
+
+window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+
+    if (isInstalledApp()) {
+        return;
+    }
+
+    deferredInstallPrompt = event;
+    installButton?.classList.remove("hidden");
+});
+
+installButton?.addEventListener("click", async () => {
+    if (!deferredInstallPrompt || isInstalledApp()) {
+        hideInstallButton();
+        return;
+    }
+
+    const promptEvent = deferredInstallPrompt;
+    deferredInstallPrompt = null;
+    hideInstallButton();
+
+    try {
+        await promptEvent.prompt();
+        await promptEvent.userChoice;
+    } catch (error) {
+        console.warn("Не удалось открыть установку приложения:", error);
+    }
+});
+
+window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    hideInstallButton();
+});
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js", {
+            updateViaCache: "none"
+        }).catch((error) => {
+            console.warn("Не удалось зарегистрировать service worker:", error);
+        });
+    });
+}
+
 document.getElementById("backHomeButton").addEventListener("click", () => {
     showScreen("homeScreen");
 });

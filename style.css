@@ -77,6 +77,28 @@ body {
     transform: scale(1.05);
 }
 
+.installButton {
+    display: block;
+    margin: -38px auto 0;
+    padding: 10px 18px;
+    border: 2px solid rgba(255, 255, 255, .82);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .68);
+    color: #4f5f8c;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 5px 12px rgba(69, 101, 152, .14);
+}
+
+.installButton:hover {
+    background: rgba(255, 255, 255, .86);
+}
+
+.installButton.hidden {
+    display: none;
+}
+
 .header {
     display: flex;
     align-items: center;
