@@ -2435,13 +2435,43 @@ window.addEventListener("appinstalled", () => {
 });
 
 if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./service-worker.js", {
-            updateViaCache: "none"
-        }).catch((error) => {
-            console.warn("Не удалось зарегистрировать service worker:", error);
+    const isLocalDevelopment = window.location.hostname === "127.0.0.1"
+        || window.location.hostname === "localhost";
+
+    if (isLocalDevelopment) {
+        const cleanupReloadKey = "azbukaLocalServiceWorkerCleanup";
+
+        (async () => {
+            const wasControlled = Boolean(navigator.serviceWorker.controller);
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            const cacheNames = await caches.keys();
+
+            await Promise.all([
+                ...registrations.map((registration) => registration.unregister()),
+                ...cacheNames
+                    .filter((cacheName) => cacheName.startsWith("azbuka-"))
+                    .map((cacheName) => caches.delete(cacheName))
+            ]);
+
+            if (wasControlled && sessionStorage.getItem(cleanupReloadKey) !== "done") {
+                sessionStorage.setItem(cleanupReloadKey, "done");
+                window.location.reload();
+                return;
+            }
+
+            sessionStorage.removeItem(cleanupReloadKey);
+        })().catch((error) => {
+            console.warn("Не удалось очистить локальный service worker:", error);
         });
-    });
+    } else {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("./service-worker.js", {
+                updateViaCache: "none"
+            }).catch((error) => {
+                console.warn("Не удалось зарегистрировать service worker:", error);
+            });
+        });
+    }
 }
 
 document.getElementById("backHomeButton").addEventListener("click", () => {

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "azbuka-v2";
+const CACHE_VERSION = "azbuka-v3";
 const CORE_CACHE = `${CACHE_VERSION}-core`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_BASE = new URL("./", self.registration.scope);
@@ -82,8 +82,12 @@ async function staleWhileRevalidate(request) {
     const cachedResponse = await caches.match(request);
     const updatePromise = fetch(request).then(async (response) => {
         if (response.ok) {
-            const cache = await caches.open(RUNTIME_CACHE);
-            await cache.put(request, response.clone());
+            try {
+                const cache = await caches.open(RUNTIME_CACHE);
+                await cache.put(request, response.clone());
+            } catch (error) {
+                console.warn("Ресурс получен, но не сохранён в кэше:", request.url, error);
+            }
         }
 
         return response;
@@ -103,6 +107,10 @@ self.addEventListener("fetch", (event) => {
     if (request.method !== "GET"
         || url.origin !== self.location.origin
         || !url.pathname.startsWith(APP_BASE.pathname)) {
+        return;
+    }
+
+    if (request.headers.has("range")) {
         return;
     }
 

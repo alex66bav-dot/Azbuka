@@ -3,13 +3,19 @@
 
     const soundEnabledStorageKey = "azbukaSoundEnabled";
     const audioRoots = Object.freeze({
-        letters: "assets/audio/letters",
-        words: "assets/audio/words",
-        effects: "assets/audio/effects"
+        letters: "./assets/audio/letters",
+        words: "./assets/audio/words",
+        effects: "./assets/audio/effects"
     });
+    const appBaseUrl = new URL("./", document.baseURI);
+
+    function getAudioUrl(path) {
+        return new URL(path, appBaseUrl).href;
+    }
+
     const effectNames = ["click", "correct", "wrong", "win", "celebration"];
     const preloadedEffects = new Map(effectNames.map((name) => {
-        const audio = new Audio(`${audioRoots.effects}/${name}.mp3`);
+        const audio = new Audio(getAudioUrl(`${audioRoots.effects}/${name}.mp3`));
 
         audio.preload = "auto";
         audio.load();
@@ -79,7 +85,7 @@
         }
 
         stopVoice();
-        const audio = new Audio(path);
+        const audio = new Audio(getAudioUrl(path));
         voiceAudio = audio;
         safelyPlay(audio, () => {
             if (voiceAudio === audio) {
@@ -112,7 +118,7 @@
             return;
         }
 
-        const audio = new Audio(`${audioRoots.effects}/${name}.mp3`);
+        const audio = new Audio(getAudioUrl(`${audioRoots.effects}/${name}.mp3`));
         activeEffects.add(audio);
         safelyPlay(audio, () => activeEffects.delete(audio));
     }
