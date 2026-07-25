@@ -1,4 +1,4 @@
-const CACHE_VERSION = "azbuka-v3";
+const CACHE_VERSION = "azbuka-v6";
 const CORE_CACHE = `${CACHE_VERSION}-core`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_BASE = new URL("./", self.registration.scope);
@@ -114,7 +114,8 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    if (request.mode === "navigate" || request.headers.get("accept")?.includes("text/html")) {
+    const acceptHeader = request.headers.get("accept");
+    if (request.mode === "navigate" || (acceptHeader && acceptHeader.includes("text/html"))) {
         event.respondWith(networkFirstHtml(request));
         return;
     }

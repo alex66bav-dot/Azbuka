@@ -27,7 +27,7 @@
     function loadSoundEnabled() {
         try {
             return localStorage.getItem(soundEnabledStorageKey) !== "false";
-        } catch {
+        } catch (error) {
             return true;
         }
     }
@@ -38,7 +38,9 @@
         const finish = () => {
             audio.removeEventListener("ended", finish);
             audio.removeEventListener("error", finish);
-            onFinish?.();
+            if (onFinish) {
+                onFinish();
+            }
         };
 
         audio.addEventListener("ended", finish);
@@ -46,8 +48,10 @@
 
         try {
             const playResult = audio.play();
-            playResult?.catch(finish);
-        } catch {
+            if (playResult) {
+                playResult.catch(finish);
+            }
+        } catch (error) {
             finish();
         }
     }
@@ -110,8 +114,11 @@
             clickAudio.currentTime = 0;
 
             try {
-                clickAudio.play()?.catch(() => {});
-            } catch {
+                const playResult = clickAudio.play();
+                if (playResult) {
+                    playResult.catch(() => {});
+                }
+            } catch (error) {
                 // A mobile browser can reject playback until its first user gesture.
             }
 
@@ -128,7 +135,7 @@
 
         try {
             localStorage.setItem(soundEnabledStorageKey, String(soundEnabled));
-        } catch {
+        } catch (error) {
             // Storage can be unavailable in private/restricted browser contexts.
         }
 
