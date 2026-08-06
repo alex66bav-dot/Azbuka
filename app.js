@@ -1,3 +1,7 @@
+// Keep the app interface free from native copy/translate and drag menus.
+document.addEventListener("contextmenu", (event) => event.preventDefault());
+document.addEventListener("dragstart", (event) => event.preventDefault());
+
 const transliteration = {
     а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "zh", з: "z",
     и: "i", й: "short-i", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r",
@@ -423,6 +427,7 @@ let busDrive = null;
 let busProgress = 0;
 let busRouteStates = [];
 let busSelectedRouteIndex = null;
+let busRouteStarted = false;
 let busRouteSetIndex = -1;
 const lastSpecialFindSets = new Map();
 const lastSpecialConnectSets = new Map();
@@ -1776,50 +1781,73 @@ function getNearestBusRoute(pointer, routeStates = busRouteStates, minimumProgre
     return { nearestRoute, nearestSample, nearestDistance };
 }
 
+function getNextBusProgress(candidateProgress) {
+    return candidateProgress <= 0.025 ? 0 : candidateProgress;
+}
+
+function getBusRouteFromStartDelta(deltaX, deltaY) {
+    const minimumMovement = 24;
+
+    if (Math.hypot(deltaX, deltaY) < minimumMovement) {
+        return null;
+    }
+
+    const horizontalMovement = Math.abs(deltaX);
+    const verticalMovement = Math.abs(deltaY);
+
+    if (verticalMovement >= horizontalMovement * 0.75) {
+        return deltaY < 0 ? 0 : 2;
+    }
+
+    if (deltaX > 0 && horizontalMovement >= verticalMovement * 1.35) {
+        return 1;
+    }
+
+    return null;
+}
+
 function moveBusToPointer(event) {
-    if (busRoundCompleted || busRouteStates.length === 0 || busSelectedRouteIndex === null) {
+    if (busRoundCompleted || busRouteStates.length === 0) {
         return;
     }
 
     const pointer = getBusPointerPoint(event);
+    const canChooseRoute = busSelectedRouteIndex === null;
+
+    if (canChooseRoute) {
+        const routeIndex = getBusRouteFromStartDelta(
+            event.clientX - busDrive.branchStartClientX,
+            event.clientY - busDrive.branchStartClientY
+        );
+
+        if (routeIndex === null) {
+            return;
+        }
+
+        busSelectedRouteIndex = routeIndex;
+    }
+
     const selectedRoute = busRouteStates[busSelectedRouteIndex];
     const { nearestSample, nearestDistance } = getNearestBusRoute(pointer, [selectedRoute]);
 
     if (!nearestSample
-        || nearestDistance > 105
-        || nearestSample.progress < busProgress - 0.05
-        || nearestSample.progress > busProgress + 0.24) {
+        || nearestDistance > 105) {
         return;
     }
 
-    busProgress = Math.max(busProgress, nearestSample.progress);
+    const hadLeftStart = busRouteStarted;
+    busProgress = getNextBusProgress(nearestSample.progress);
+
+    if (busProgress > 0) {
+        busRouteStarted = true;
+    } else if (hadLeftStart) {
+        busSelectedRouteIndex = null;
+        busRouteStarted = false;
+        busDrive.branchStartClientX = event.clientX;
+        busDrive.branchStartClientY = event.clientY;
+    }
+
     layoutBusRound();
-
-}
-
-function selectBusRoute(event) {
-    if (!busDrive || busSelectedRouteIndex !== null) {
-        return busSelectedRouteIndex !== null;
-    }
-
-    const distanceFromStart = Math.hypot(
-        event.clientX - busDrive.startClientX,
-        event.clientY - busDrive.startClientY
-    );
-
-    if (distanceFromStart < 20) {
-        return false;
-    }
-
-    const verticalOffset = event.clientY - busDrive.startClientY;
-    const directionThreshold = 16;
-
-    busSelectedRouteIndex = verticalOffset <= -directionThreshold
-        ? 0
-        : verticalOffset >= directionThreshold
-            ? 2
-            : 1;
-    return true;
 }
 
 function beginBusDrive(event) {
@@ -1828,14 +1856,10 @@ function beginBusDrive(event) {
     }
 
     event.preventDefault();
-    const pointer = getBusPointerPoint(event);
-
     busDrive = {
         pointerId: event.pointerId,
-        startX: pointer.x,
-        startY: pointer.y,
-        startClientX: event.clientX,
-        startClientY: event.clientY
+        branchStartClientX: event.clientX,
+        branchStartClientY: event.clientY
     };
     if (busVehicle.setPointerCapture) {
         busVehicle.setPointerCapture(event.pointerId);
@@ -1848,9 +1872,7 @@ function continueBusDrive(event) {
         return;
     }
 
-    if (selectBusRoute(event)) {
-        moveBusToPointer(event);
-    }
+    moveBusToPointer(event);
 }
 
 function finishBusDrive(event) {
@@ -1863,6 +1885,11 @@ function finishBusDrive(event) {
     }
     busDrive = null;
     busVehicle.classList.remove("is-driving");
+
+    if (busProgress === 0) {
+        busSelectedRouteIndex = null;
+        busRouteStarted = false;
+    }
 
     if (busProgress >= 0.93 && busSelectedRouteIndex !== null) {
         resolveBusDestination();
@@ -1888,6 +1915,7 @@ function resetBusVehicle() {
     busDrive = null;
     busProgress = 0;
     busSelectedRouteIndex = null;
+    busRouteStarted = false;
     busVehicle.classList.add("is-returning");
     layoutBusRound();
     setTimeout(() => busVehicle.classList.remove("is-returning"), 300);
@@ -1955,6 +1983,7 @@ function showBusRound(letterData) {
     busDrive = null;
     busProgress = 0;
     busSelectedRouteIndex = null;
+    busRouteStarted = false;
     clearTimeout(nextRoundTimeout);
     stopBalloonAnimation();
     cancelActiveConnection();
@@ -2242,43 +2271,10 @@ function finishRound() {
     recordMiniGameCompletion(selectedLetter.letter);
     stopBalloonAnimation();
     balloons.innerHTML = "";
-
-    const celebration = document.createElement("div");
-    const phrase = getCelebrationPhrase();
-    celebration.textContent = phrase;
-    celebration.style.position = "fixed";
-    celebration.style.top = "50%";
-    celebration.style.left = "50%";
-    celebration.style.zIndex = "10";
-    celebration.style.width = "90vw";
-    celebration.style.textAlign = "center";
-    celebration.style.fontSize = "clamp(48px, 11vw, 96px)";
-    celebration.style.fontWeight = "bold";
-    celebration.style.background = "linear-gradient(90deg, #ff6b6b, #ffb703, #51cf66, #4dabf7)";
-    celebration.style.webkitBackgroundClip = "text";
-    celebration.style.backgroundClip = "text";
-    celebration.style.color = "transparent";
-    celebration.style.webkitTextStroke = "2px white";
-    celebration.style.textShadow = "0 6px 14px rgba(0, 0, 0, 0.25)";
-    celebration.style.opacity = "0";
-    celebration.style.transform = "translate(-50%, -50%) scale(0.5)";
-    celebration.style.transition = "transform 300ms ease-out, opacity 300ms ease-out";
-    balloons.appendChild(celebration);
-
-    requestAnimationFrame(() => {
-        celebration.style.opacity = "1";
-        celebration.style.transform = "translate(-50%, -50%) scale(1)";
-    });
-
-    setTimeout(() => {
-        celebration.style.opacity = "0";
-        celebration.style.transform = "translate(-50%, -50%) scale(1.1)";
-    }, 900);
-
-    nextRoundTimeout = setTimeout(() => {
-        nextRoundTimeout = null;
-        createGameRound();
-    }, 1300);
+    repeatRoundButton.textContent = "Повторить";
+    repeatRoundButton.classList.remove("hidden");
+    removeClass(backToLettersButton, "hidden");
+    showCelebrationPhrase(getCelebrationPhrase());
 }
 
 function handleBalloonClick(balloon, letter) {
@@ -2711,6 +2707,8 @@ if (repeatRoundButton) {
             showSorterRound(selectedLetter);
         } else if (activeGameMode === "bus") {
             showBusRound(selectedLetter);
+        } else if (activeGameMode === "balloons") {
+            showBalloonGame(selectedLetter);
         } else {
             showFindObjectRound(selectedLetter);
         }
