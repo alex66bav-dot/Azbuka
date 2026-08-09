@@ -5,6 +5,7 @@
     const audioRoots = Object.freeze({
         letters: "./assets/audio/letters",
         words: "./assets/audio/words",
+        instructions: "./assets/audio/instructions",
         effects: "./assets/audio/effects"
     });
     const appBaseUrl = new URL("./", document.baseURI);
@@ -156,6 +157,9 @@
         prepare: () => preloadedEffects.forEach((audio) => audio.load()),
         playLetter: (fileName) => playVoice(fileName ? `${audioRoots.letters}/${fileName}.mp3` : null),
         playWord: (fileName) => playVoice(fileName ? `${audioRoots.words}/${fileName}.mp3` : null),
+        playInstruction: (fileName, gameNumber) => playVoice(
+            fileName && gameNumber ? `${audioRoots.instructions}/${fileName}_${gameNumber}.mp3` : null
+        ),
         playEffect,
         stopVoice,
         stopAll: () => {

@@ -1,0 +1,15 @@
+{
+  "name": "azbuka",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:web": "node scripts/copy-web-assets.mjs",
+    "build:android:demo": "node scripts/copy-web-assets.mjs --demo",
+    "cap:sync": "npm run build:android:demo && cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/core": "^8.4.2"
+  }
+}

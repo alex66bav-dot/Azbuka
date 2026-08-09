@@ -323,6 +323,7 @@ const alphabet = [
 ];
 
 const FREE_LETTERS = new Set(["А", "Б", "В"]);
+const TEMPORARILY_UNLOCK_ALL_LETTERS = true;
 const GITHUB_PAGES_HOSTNAME = "alex66bav-dot.github.io";
 
 function isDemoMode() {
@@ -338,7 +339,7 @@ function hasFullAccess() {
 }
 
 function isLetterUnlocked(letter) {
-    return hasFullAccess() || FREE_LETTERS.has(letter);
+    return TEMPORARILY_UNLOCK_ALL_LETTERS || hasFullAccess() || FREE_LETTERS.has(letter);
 }
 
 function getAccessibleAlphabet() {
@@ -467,6 +468,12 @@ function removeClass(element, className) {
 function playAudioEffect(name) {
     if (window.AzbukaAudio) {
         window.AzbukaAudio.playEffect(name);
+    }
+}
+
+function playGameInstruction(letterData, gameNumber) {
+    if (window.AzbukaAudio && letterData) {
+        window.AzbukaAudio.playInstruction(getLetterFolderName(letterData.letter), gameNumber);
     }
 }
 
@@ -1330,7 +1337,13 @@ function showSorterRound(letterData) {
     sorterLetter.setAttribute("aria-label", `Буква ${letterData.letter}`);
     sorterLetter.classList.remove("is-complete");
     resetSorterLetterPosition();
-    setGameScreenTitle("Перетащи букву ", letterData.letter, " к её тени");
+    if (letterData.letter === "Ъ") {
+        setGameScreenTitle("Перетащи ", "твёрдый знак", " к его тени");
+    } else if (letterData.letter === "Ь") {
+        setGameScreenTitle("Перетащи ", "мягкий знак", " к его тени");
+    } else {
+        setGameScreenTitle("Перетащи букву ", letterData.letter, " к её тени");
+    }
     document.querySelector(".gameTitle").textContent = "";
     repeatRoundButton.textContent = "Новые тени";
     repeatRoundButton.classList.remove("hidden");
@@ -1539,17 +1552,17 @@ function showConnectLineRound(letterData) {
     stopBalloonAnimation();
 
     if (letterData.letter === "Ъ") {
-        setGameScreenTitle("Соедини ", "твёрдый знак", " с двумя подходящими словами");
-        connectLineBoard.setAttribute("aria-label", "Соедини твёрдый знак с двумя подходящими словами");
+        setGameScreenTitle("Соедини ", "твёрдый знак", " с двумя словами, в которых есть твёрдый знак");
+        connectLineBoard.setAttribute("aria-label", "Соедини твёрдый знак с двумя словами, в которых есть твёрдый знак");
     } else if (letterData.letter === "Ь") {
-        setGameScreenTitle("Соедини ", "мягкий знак", " с двумя подходящими словами");
-        connectLineBoard.setAttribute("aria-label", "Соедини мягкий знак с двумя подходящими словами");
+        setGameScreenTitle("Соедини ", "мягкий знак", " с двумя словами, в которых есть мягкий знак");
+        connectLineBoard.setAttribute("aria-label", "Соедини мягкий знак с двумя словами, в которых есть мягкий знак");
     } else if (letterData.letter === "Ы") {
-        setGameScreenTitle("Соедини букву ", "Ы", " с двумя подходящими словами");
-        connectLineBoard.setAttribute("aria-label", "Соедини букву Ы с двумя подходящими словами");
+        setGameScreenTitle("Соедини букву ", "Ы", " с двумя словами, в которых есть буква Ы");
+        connectLineBoard.setAttribute("aria-label", "Соедини букву Ы с двумя словами, в которых есть буква Ы");
     } else {
-        setGameScreenTitle("Соедини букву ", letterData.letter, " с двумя подходящими изображениями");
-        connectLineBoard.setAttribute("aria-label", `Соедини букву ${letterData.letter} с двумя подходящими изображениями`);
+        setGameScreenTitle("Соедини букву ", letterData.letter, " с двумя подходящими картинками");
+        connectLineBoard.setAttribute("aria-label", `Соедини букву ${letterData.letter} с двумя подходящими картинками`);
     }
 
     document.querySelector(".gameTitle").textContent = "";
@@ -1995,16 +2008,16 @@ function showBusRound(letterData) {
     createBusDestinations();
 
     if (letterData.letter === "Ъ") {
-        setGameScreenTitle("Проведи автобус к слову с ", "твёрдым знаком");
+        setGameScreenTitle("Проведи автобус к слову, в котором есть ", "твёрдый знак");
     } else if (letterData.letter === "Ь") {
-        setGameScreenTitle("Проведи автобус к слову с ", "мягким знаком");
+        setGameScreenTitle("Проведи автобус к слову, в котором есть ", "мягкий знак");
     } else if (letterData.letter === "Ы") {
-        setGameScreenTitle("Проведи автобус к слову с буквой ", "Ы");
+        setGameScreenTitle("Проведи автобус к слову, в котором есть буква ", "Ы");
     } else {
         setGameScreenTitle("Проведи автобус к слову на букву ", letterData.letter);
     }
 
-    document.querySelector(".gameTitle").textContent = "Веди автобус пальцем по дороге";
+    document.querySelector(".gameTitle").textContent = "";
     repeatRoundButton.textContent = "Новая дорога";
     repeatRoundButton.classList.remove("hidden");
     addClass(backToLettersButton, "hidden");
@@ -2335,8 +2348,14 @@ function showBalloonGame(letterData) {
     removeClass(balloons, "hidden");
     addClass(repeatRoundButton, "hidden");
     addClass(backToLettersButton, "hidden");
-    setGameScreenTitle("Лопни шарики с буквой ", letterData.letter);
-    document.querySelector(".gameTitle").textContent = "Найди 3 шарика";
+    if (letterData.letter === "Ъ") {
+        setGameScreenTitle("Лопни три шарика с ", "твёрдым знаком");
+    } else if (letterData.letter === "Ь") {
+        setGameScreenTitle("Лопни три шарика с ", "мягким знаком");
+    } else {
+        setGameScreenTitle("Лопни три шарика с буквой ", letterData.letter);
+    }
+    document.querySelector(".gameTitle").textContent = "";
     resetCelebrationOverlay();
     showScreen("gameScreen");
     createGameRound();
@@ -2480,6 +2499,14 @@ if (wordsBlock) {
     wordsBlock.addEventListener("click", () => {
         if (window.AzbukaAudio) {
             window.AzbukaAudio.playWord(displayedLetterWord ? displayedLetterWord.audio : null);
+        }
+    });
+}
+
+if (bigLetter) {
+    bigLetter.addEventListener("click", () => {
+        if (window.AzbukaAudio && selectedLetter) {
+            window.AzbukaAudio.playLetter(getLetterFolderName(selectedLetter.letter));
         }
     });
 }
@@ -2682,12 +2709,14 @@ if (confirmResetButton) {
 document.getElementById("playGameButton").addEventListener("click", () => {
     playAudioEffect("click");
     showFindObjectRound(selectedLetter);
+    playGameInstruction(selectedLetter, 2);
 });
 
 if (playBalloonsGameButton) {
     playBalloonsGameButton.addEventListener("click", () => {
         playAudioEffect("click");
         showBalloonGame(selectedLetter);
+        playGameInstruction(selectedLetter, 1);
     });
 }
 
@@ -2695,6 +2724,7 @@ if (playSorterGameButton) {
     playSorterGameButton.addEventListener("click", () => {
         playAudioEffect("click");
         showSorterRound(selectedLetter);
+        playGameInstruction(selectedLetter, 3);
     });
 }
 
@@ -2702,6 +2732,7 @@ if (playConnectGameButton) {
     playConnectGameButton.addEventListener("click", () => {
         playAudioEffect("click");
         showConnectLineRound(selectedLetter);
+        playGameInstruction(selectedLetter, 4);
     });
 }
 
@@ -2709,6 +2740,7 @@ if (playBusGameButton) {
     playBusGameButton.addEventListener("click", () => {
         playAudioEffect("click");
         showBusRound(selectedLetter);
+        playGameInstruction(selectedLetter, 5);
     });
 }
 

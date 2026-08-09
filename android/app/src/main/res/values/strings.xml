@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Azbuka</string>
+    <string name="title_activity_main">Azbuka</string>
+    <string name="package_name">com.azbuka.app</string>
+    <string name="custom_url_scheme">com.azbuka.app</string>
+</resources>
