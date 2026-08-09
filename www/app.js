@@ -323,7 +323,7 @@ const alphabet = [
 ];
 
 const FREE_LETTERS = new Set(["А", "Б", "В"]);
-const TEMPORARILY_UNLOCK_ALL_LETTERS = true;
+const TEMPORARILY_UNLOCK_ALL_LETTERS = false;
 const GITHUB_PAGES_HOSTNAME = "alex66bav-dot.github.io";
 
 function isDemoMode() {
