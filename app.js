@@ -325,6 +325,13 @@ const alphabet = [
 const FREE_LETTERS = new Set(["А", "Б", "В"]);
 const TEMPORARILY_UNLOCK_ALL_LETTERS = false;
 const GITHUB_PAGES_HOSTNAME = "alex66bav-dot.github.io";
+const androidBilling = window.Capacitor
+    && typeof window.Capacitor.isNativePlatform === "function"
+    && window.Capacitor.isNativePlatform()
+    && window.Capacitor.Plugins
+    ? window.Capacitor.Plugins.AzbukaBilling
+    : null;
+let androidFullAccess = false;
 
 function isDemoMode() {
     if (window.location.hostname === GITHUB_PAGES_HOSTNAME) {
@@ -335,6 +342,10 @@ function isDemoMode() {
 }
 
 function hasFullAccess() {
+    if (androidBilling) {
+        return androidFullAccess;
+    }
+
     return !isDemoMode();
 }
 
@@ -372,6 +383,7 @@ const settingsButton = document.getElementById("settingsButton");
 const settingsOverlay = document.getElementById("settingsOverlay");
 const demoNotice = document.getElementById("demoNotice");
 const fullVersionOverlay = document.getElementById("fullVersionOverlay");
+const fullVersionText = document.getElementById("fullVersionText");
 const closeFullVersionButton = document.getElementById("closeFullVersionButton");
 const confirmFullVersionButton = document.getElementById("confirmFullVersionButton");
 const showResetConfirmButton = document.getElementById("showResetConfirmButton");
@@ -1794,6 +1806,101 @@ function getNearestBusRoute(pointer, routeStates = busRouteStates, minimumProgre
     return { nearestRoute, nearestSample, nearestDistance };
 }
 
+function updateLetterAccessUI() {
+    alphabet.forEach((letterData) => {
+        const card = letterCards.get(letterData.letter);
+        const wrapper = card ? card.parentElement : null;
+        const isUnlocked = isLetterUnlocked(letterData.letter);
+
+        if (!card || !wrapper) {
+            return;
+        }
+
+        card.classList.toggle("is-locked", !isUnlocked);
+        wrapper.classList.toggle("is-locked", !isUnlocked);
+
+        let lock = wrapper.querySelector(".letterLock");
+        if (!isUnlocked && !lock) {
+            lock = document.createElement("span");
+            lock.className = "letterLock";
+            lock.textContent = "🔒";
+            lock.setAttribute("aria-hidden", "true");
+            wrapper.appendChild(lock);
+        } else if (isUnlocked && lock) {
+            lock.remove();
+        }
+
+        if (isUnlocked) {
+            card.setAttribute("aria-label", letterData.letter);
+        } else {
+            card.setAttribute("aria-label", `${letterData.letter}, доступна в полной версии`);
+        }
+        updateLetterCardProgress(letterData.letter);
+    });
+}
+
+function applyBillingState(state) {
+    if (!androidBilling || !state) {
+        return;
+    }
+
+    androidFullAccess = state.fullAccess === true;
+    updateLetterAccessUI();
+
+    if (androidFullAccess) {
+        closeFullVersionModal();
+        return;
+    }
+
+    if (!fullVersionText) {
+        return;
+    }
+    if (state.status === "pending") {
+        fullVersionText.textContent = "Платёж ожидает подтверждения в Google Play";
+    } else if (state.status === "canceled") {
+        fullVersionText.textContent = "Покупка отменена. Полный доступ не был активирован";
+    } else if (["error", "unavailable", "disconnected", "acknowledgement_error"].includes(state.status)) {
+        fullVersionText.textContent = "Google Play временно недоступен. Попробуйте ещё раз";
+    }
+}
+
+async function initializeAndroidBilling() {
+    if (!androidBilling) {
+        return;
+    }
+
+    try {
+        await androidBilling.addListener("entitlementChanged", applyBillingState);
+        applyBillingState(await androidBilling.getEntitlement());
+    } catch (error) {
+        applyBillingState({ fullAccess: false, status: "unavailable" });
+    }
+}
+
+async function purchaseFullAccess() {
+    if (!androidBilling) {
+        closeFullVersionModal();
+        return;
+    }
+
+    confirmFullVersionButton.disabled = true;
+    if (fullVersionText) {
+        fullVersionText.textContent = "Открываем Google Play…";
+    }
+
+    try {
+        await androidBilling.purchaseFullAccess();
+    } catch (error) {
+        if (fullVersionText) {
+            fullVersionText.textContent = error && error.message
+                ? error.message
+                : "Покупка сейчас недоступна. Попробуйте позже";
+        }
+    } finally {
+        confirmFullVersionButton.disabled = false;
+    }
+}
+
 function getNextBusProgress(candidateProgress) {
     return candidateProgress <= 0.025 ? 0 : candidateProgress;
 }
@@ -2482,10 +2589,11 @@ alphabet.forEach((letterData) => {
 });
 
 if (demoNotice) {
-    demoNotice.classList.toggle("hidden", !isDemoMode());
+    demoNotice.classList.toggle("hidden", Boolean(androidBilling) || !isDemoMode());
 }
 updateProgressUI();
 updateSoundToggle();
+initializeAndroidBilling();
 
 if (letterImage) {
     letterImage.addEventListener("click", () => {
@@ -2669,7 +2777,7 @@ if (closeFullVersionButton) {
     closeFullVersionButton.addEventListener("click", closeFullVersionModal);
 }
 if (confirmFullVersionButton) {
-    confirmFullVersionButton.addEventListener("click", closeFullVersionModal);
+    confirmFullVersionButton.addEventListener("click", purchaseFullAccess);
 }
 if (fullVersionOverlay) {
     fullVersionOverlay.addEventListener("click", (event) => {
