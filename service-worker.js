@@ -1,4 +1,4 @@
-const CACHE_VERSION = "azbuka-v7";
+const CACHE_VERSION = "azbuka-v8";
 const CORE_CACHE = `${CACHE_VERSION}-core`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_BASE = new URL("./", self.registration.scope);

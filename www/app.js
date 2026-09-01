@@ -17,226 +17,226 @@ const wordTransliteration = {
 
 const customWordImages = {
     В: {
-        Велосипед: "bicycle.png",
-        Вишня: "cherry.png",
-        Волк: "wolf.png",
-        Ворона: "crow.png",
-        Ведро: "bucket.png"
+        Велосипед: "bicycle.webp",
+        Вишня: "cherry.webp",
+        Волк: "wolf.webp",
+        Ворона: "crow.webp",
+        Ведро: "bucket.webp"
     },
     Г: {
-        Груша: "pear.png",
-        Гриб: "mushroom.png",
-        Гусеница: "caterpillar.png",
-        Гитара: "guitar.png",
-        Голубь: "pigeon.png"
+        Груша: "pear.webp",
+        Гриб: "mushroom.webp",
+        Гусеница: "caterpillar.webp",
+        Гитара: "guitar.webp",
+        Голубь: "pigeon.webp"
     },
     Д: {
-        Дом: "house.png",
-        Дерево: "tree.png",
-        Дельфин: "dolphin.png",
-        Дорога: "road.png",
-        Дракон: "dragon.png"
+        Дом: "house.webp",
+        Дерево: "tree.webp",
+        Дельфин: "dolphin.webp",
+        Дорога: "road.webp",
+        Дракон: "dragon.webp"
     },
     Е: {
-        Енот: "raccoon.png",
-        Ежевика: "blackberry.png",
-        Ель: "fir_tree.png",
-        Ехидна: "echidna.png",
-        Еда: "food.png"
+        Енот: "raccoon.webp",
+        Ежевика: "blackberry.webp",
+        Ель: "fir_tree.webp",
+        Ехидна: "echidna.webp",
+        Еда: "food.webp"
     },
     Ё: {
-        Ёж: "hedgehog.png",
-        Ёлка: "christmas_tree.png",
-        Ёрш: "ruff.png",
-        Ёжик: "little_hedgehog.png",
-        "Ёлочная игрушка": "christmas_ornament.png"
+        Ёж: "hedgehog.webp",
+        Ёлка: "christmas_tree.webp",
+        Ёрш: "ruff.webp",
+        Ёжик: "little_hedgehog.webp",
+        "Ёлочная игрушка": "christmas_ornament.webp"
     },
     Ж: {
-        Жираф: "giraffe.png",
-        Жук: "beetle.png",
-        Жаба: "toad.png",
-        Журавль: "crane.png",
-        Жёлудь: "acorn.png"
+        Жираф: "giraffe.webp",
+        Жук: "beetle.webp",
+        Жаба: "toad.webp",
+        Журавль: "crane.webp",
+        Жёлудь: "acorn.webp"
     },
     З: {
-        Заяц: "hare.png",
-        Зебра: "zebra.png",
-        Зонт: "umbrella.png",
-        Звезда: "star.png",
-        Земляника: "wild_strawberry.png"
+        Заяц: "hare.webp",
+        Зебра: "zebra.webp",
+        Зонт: "umbrella.webp",
+        Звезда: "star.webp",
+        Земляника: "wild_strawberry.webp"
     },
     И: {
-        Игрушка: "toy.png",
-        Индюк: "turkey.png",
-        Игла: "needle.png",
-        Ирис: "iris.png",
-        Индейка: "female_turkey.png"
+        Игрушка: "toy.webp",
+        Индюк: "turkey.webp",
+        Игла: "needle.webp",
+        Ирис: "iris.webp",
+        Индейка: "female_turkey.webp"
     },
     Й: {
-        Йогурт: "yogurt.png",
-        Йод: "iodine.png",
-        Йети: "yeti.png",
-        Йорк: "yorkie.png",
-        Йога: "yoga.png"
+        Йогурт: "yogurt.webp",
+        Йод: "iodine.webp",
+        Йети: "yeti.webp",
+        Йорк: "yorkie.webp",
+        Йога: "yoga.webp"
     },
     К: {
-        Корабль: "ship.png",
-        Кот: "cat.png",
-        Карандаш: "pencil.png",
-        Кукла: "doll.png",
-        Крокодил: "crocodile.png"
+        Корабль: "ship.webp",
+        Кот: "cat.webp",
+        Карандаш: "pencil.webp",
+        Кукла: "doll.webp",
+        Крокодил: "crocodile.webp"
     },
     Л: {
-        Лиса: "fox.png",
-        Лев: "lion.png",
-        Луна: "moon.png",
-        Лимон: "lemon.png",
-        Лодка: "boat.png"
+        Лиса: "fox.webp",
+        Лев: "lion.webp",
+        Луна: "moon.webp",
+        Лимон: "lemon.webp",
+        Лодка: "boat.webp"
     },
     М: {
-        Мяч: "ball.png",
-        Медведь: "bear.png",
-        Машина: "car.png",
-        Молоко: "milk.png",
-        Море: "sea.png"
+        Мяч: "ball.webp",
+        Медведь: "bear.webp",
+        Машина: "car.webp",
+        Молоко: "milk.webp",
+        Море: "sea.webp"
     },
     Н: {
-        Носорог: "rhinoceros.png",
-        Носки: "socks.png",
-        Небо: "sky.png",
-        Нитки: "thread.png",
-        Нора: "burrow.png"
+        Носорог: "rhinoceros.webp",
+        Носки: "socks.webp",
+        Небо: "sky.webp",
+        Нитки: "thread.webp",
+        Нора: "burrow.webp"
     },
     О: {
-        Облако: "cloud.png",
-        Окно: "window.png",
-        Остров: "island.png",
-        Одуванчик: "dandelion.png",
-        Осьминог: "octopus.png"
+        Облако: "cloud.webp",
+        Окно: "window.webp",
+        Остров: "island.webp",
+        Одуванчик: "dandelion.webp",
+        Осьминог: "octopus.webp"
     },
     П: {
-        Птица: "bird.png",
-        Панда: "panda.png",
-        Пирог: "pie.png",
-        Пальма: "palm_tree.png",
-        Паровоз: "steam_locomotive.png"
+        Птица: "bird.webp",
+        Панда: "panda.webp",
+        Пирог: "pie.webp",
+        Пальма: "palm_tree.webp",
+        Паровоз: "steam_locomotive.webp"
     },
     Р: {
-        Радуга: "rainbow.png",
-        Рыба: "fish.png",
-        Ракета: "rocket.png",
-        Робот: "robot.png",
-        Ромашка: "daisy.png"
+        Радуга: "rainbow.webp",
+        Рыба: "fish.webp",
+        Ракета: "rocket.webp",
+        Робот: "robot.webp",
+        Ромашка: "daisy.webp"
     },
     С: {
-        Солнце: "sun.png",
-        Собака: "dog.png",
-        Слон: "elephant.png",
-        Сыр: "cheese.png",
-        Самолёт: "airplane.png"
+        Солнце: "sun.webp",
+        Собака: "dog.webp",
+        Слон: "elephant.webp",
+        Сыр: "cheese.webp",
+        Самолёт: "airplane.webp"
     },
     Т: {
-        Тигр: "tiger.png",
-        Торт: "cake.png",
-        Туча: "cloud_dark.png",
-        Трактор: "tractor.png",
-        Телефон: "telephone.png"
+        Тигр: "tiger.webp",
+        Торт: "cake.webp",
+        Туча: "cloud_dark.webp",
+        Трактор: "tractor.webp",
+        Телефон: "telephone.webp"
     },
     У: {
-        Утка: "duck.png",
-        Улитка: "snail.png",
-        Улыбка: "smile.png",
-        Улица: "street.png",
-        Утюг: "iron.png"
+        Утка: "duck.webp",
+        Улитка: "snail.webp",
+        Улыбка: "smile.webp",
+        Улица: "street.webp",
+        Утюг: "iron.webp"
     },
     Ф: {
-        Фонарик: "flashlight.png",
-        Фламинго: "flamingo.png",
-        Фея: "fairy.png",
-        Флаг: "flag.png",
-        Фрукты: "fruits.png"
+        Фонарик: "flashlight.webp",
+        Фламинго: "flamingo.webp",
+        Фея: "fairy.webp",
+        Флаг: "flag.webp",
+        Фрукты: "fruits.webp"
     },
     Х: {
-        Хлеб: "bread.png",
-        Хомяк: "hamster.png",
-        Хвост: "tail.png",
-        Холодильник: "refrigerator.png",
-        Художник: "artist.png"
+        Хлеб: "bread.webp",
+        Хомяк: "hamster.webp",
+        Хвост: "tail.webp",
+        Холодильник: "refrigerator.webp",
+        Художник: "artist.webp"
     },
     Ц: {
-        Цыплёнок: "chick.png",
-        Цветок: "flower.png",
-        Цирк: "circus.png",
-        Цапля: "heron.png",
-        Цифра: "number.png"
+        Цыплёнок: "chick.webp",
+        Цветок: "flower.webp",
+        Цирк: "circus.webp",
+        Цапля: "heron.webp",
+        Цифра: "number.webp"
     },
     Ч: {
-        Черепаха: "turtle.png",
-        Часы: "clock.png",
-        Чайник: "teapot.png",
-        Чемодан: "suitcase.png",
-        Чашка: "cup.png"
+        Черепаха: "turtle.webp",
+        Часы: "clock.webp",
+        Чайник: "teapot.webp",
+        Чемодан: "suitcase.webp",
+        Чашка: "cup.webp"
     },
     Ш: {
-        Шар: "balloon.png",
-        Шуба: "fur_coat.png",
-        Шоколад: "chocolate.png",
-        Шишка: "pinecone.png",
-        Шмель: "bumblebee.png"
+        Шар: "balloon.webp",
+        Шуба: "fur_coat.webp",
+        Шоколад: "chocolate.webp",
+        Шишка: "pinecone.webp",
+        Шмель: "bumblebee.webp"
     },
     Щ: {
-        Щука: "pike.png",
-        Щенок: "puppy.png",
-        Щётка: "brush.png",
-        Щавель: "sorrel.png",
-        Щит: "shield.png"
+        Щука: "pike.webp",
+        Щенок: "puppy.webp",
+        Щётка: "brush.webp",
+        Щавель: "sorrel.webp",
+        Щит: "shield.webp"
     },
     Ъ: {
-        Подъезд: "entrance.png",
-        Объём: "volume.png",
-        Съёмка: "filming.png",
-        Объявление: "notice.png",
-        Съезд: "congress.png"
+        Подъезд: "entrance.webp",
+        Объём: "volume.webp",
+        Съёмка: "filming.webp",
+        Объявление: "notice.webp",
+        Съезд: "congress.webp"
     },
     Ы: {
-        Сырок: "syrok.png",
-        Лыжи: "lyzhi.png",
-        Дым: "smoke.png",
-        Тыква: "tykva.png",
-        Мыло: "mylo.png"
+        Сырок: "syrok.webp",
+        Лыжи: "lyzhi.webp",
+        Дым: "smoke.webp",
+        Тыква: "tykva.webp",
+        Мыло: "mylo.webp"
     },
     Ь: {
-        Семья: "family.png",
-        Конь: "horse.png",
-        Пальто: "coat.png",
-        Мальчик: "boy.png",
-        Степь: "step.png"
+        Семья: "family.webp",
+        Конь: "horse.webp",
+        Пальто: "coat.webp",
+        Мальчик: "boy.webp",
+        Степь: "step.webp"
     },
     Э: {
-        Эскимо: "popsicle.png",
-        Экран: "screen.png",
-        Экскаватор: "excavator.png",
-        Эхо: "echo.png",
-        Этажерка: "shelf.png"
+        Эскимо: "popsicle.webp",
+        Экран: "screen.webp",
+        Экскаватор: "excavator.webp",
+        Эхо: "echo.webp",
+        Этажерка: "shelf.webp"
     },
     Ю: {
-        Юла: "spinning_top.png",
-        Юбка: "skirt.png",
-        Юрта: "yurt.png",
-        Юнга: "cabin_boy.png",
-        Юмор: "humor.png"
+        Юла: "spinning_top.webp",
+        Юбка: "skirt.webp",
+        Юрта: "yurt.webp",
+        Юнга: "cabin_boy.webp",
+        Юмор: "humor.webp"
     },
     Я: {
-        Яблоко: "apple.png",
-        Ягода: "berry.png",
-        Якорь: "anchor.png",
-        Ящерица: "lizard.png",
-        Яйцо: "egg.png"
+        Яблоко: "apple.webp",
+        Ягода: "berry.webp",
+        Якорь: "anchor.webp",
+        Ящерица: "lizard.webp",
+        Яйцо: "egg.webp"
     }
 };
 const sharedWordImagePaths = {
     Ы: {
-        Мыло: "assets/images/letters/yery/mylo.png"
+        Мыло: "assets/images/letters/yery/mylo.webp"
     }
 };
 
@@ -262,7 +262,7 @@ function createWord(letter, text) {
                 ? wordTransliteration[character]
                 : character)
             .join("")
-            .replace(/\s+/g, "-")}.png`;
+            .replace(/\s+/g, "-")}.webp`;
 
     const audioName = text
         .toLowerCase()
