@@ -1032,6 +1032,10 @@ function appendHighlightedSpecialWord(container, text, specialCharacter) {
     });
 }
 
+function keepSpecialWordOnOneLine(text) {
+    return text.toLowerCase() !== "объявление";
+}
+
 function buildSpecialWordSet(letterData, correctCount, wrongCount, previousSets) {
     let nextItems = [];
     let signature = "";
@@ -1174,7 +1178,9 @@ function showFindObjectRound(letterData) {
         label.className = "cardLabel";
 
         if (isSpecialLetter(letterData.letter)) {
-            card.classList.add("specialWordCard");
+            card.classList.add("specialWordCard", "specialTextFitCard");
+            label.classList.add("specialTextFitLabel");
+            label.classList.toggle("specialTextSingleLine", keepSpecialWordOnOneLine(item.text));
             appendHighlightedSpecialWord(label, item.text, item.specialCharacter);
         } else {
             const image = document.createElement("img");
@@ -1606,8 +1612,9 @@ function showConnectLineRound(letterData) {
         if (isSpecialLetter(letterData.letter)) {
             const label = document.createElement("span");
 
-            button.classList.add("specialWordCard");
-            label.className = "connectWordLabel";
+            button.classList.add("specialWordCard", "specialTextFitCard");
+            label.className = "connectWordLabel specialTextFitLabel";
+            label.classList.toggle("specialTextSingleLine", keepSpecialWordOnOneLine(item.word.text));
             appendHighlightedSpecialWord(label, item.word.text, item.specialCharacter);
             button.appendChild(label);
         } else {

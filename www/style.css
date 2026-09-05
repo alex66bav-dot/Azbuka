@@ -1492,6 +1492,34 @@ body {
     text-align: center;
 }
 
+/* Only the text-only Ъ/Ь/Ы cards in Find Words and Connect Words. */
+.findObjectCard.specialTextFitCard .specialTextFitLabel {
+    width: 100%;
+    max-width: 100%;
+    font-size: clamp(16px, 3vw, 25px);
+    line-height: 1.08;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.connectImageCard.specialTextFitCard .specialTextFitLabel {
+    width: 100%;
+    max-width: 100%;
+    font-size: clamp(15px, 2.4vw, 20px);
+    line-height: 1.08;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.findObjectCard.specialTextFitCard .specialTextSingleLine {
+    font-size: clamp(15px, 2.6vw, 22px);
+}
+
+.specialTextFitCard .specialTextSingleLine {
+    white-space: nowrap;
+    overflow-wrap: normal;
+}
+
 .specialWordHighlight {
     color: #f04f6c;
     font-size: 1.12em;
