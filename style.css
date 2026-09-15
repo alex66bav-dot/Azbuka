@@ -66,6 +66,45 @@ body {
     transition: .2s;
 }
 
+.homeLanguagePrompt {
+    max-width: 480px;
+    margin: 16px auto 0;
+    color: #385b7a;
+    font-size: clamp(12px, 3.4vw, 14px);
+    font-weight: 600;
+    line-height: 1.45;
+    text-align: center;
+}
+
+.homeLanguageSwitch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    width: min(280px, 100%);
+    margin: 10px auto 0;
+    padding: 4px;
+    border: 1px solid #b9d7ff;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .55);
+}
+
+.homeLanguageSwitch .languageButton {
+    font-size: 16px;
+}
+
+.homeLanguageSwitch .languageButton:focus-visible {
+    outline: 3px solid #385b7a;
+    outline-offset: 2px;
+}
+
+#homeScreen .logo {
+    margin-top: 36px;
+}
+
+#homeScreen .mainButton {
+    margin-top: 28px;
+}
+
 .repeatRoundButton {
     display: block;
     margin: 14px auto 0;
@@ -456,6 +495,45 @@ body {
     margin-bottom: 16px;
     color: #5e7197;
     font-size: 14px;
+}
+
+.languageSettings {
+    margin-bottom: 12px;
+    padding: 12px;
+    border-radius: 16px;
+    background: #f3f7ff;
+}
+
+.languageSettingsLabel {
+    display: block;
+    margin-bottom: 8px;
+    color: #385b7a;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.languageButtons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.languageButton {
+    min-height: 44px;
+    border: 2px solid #b9d7ff;
+    border-radius: 13px;
+    padding: 8px 10px;
+    background: white;
+    color: #42658c;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.languageButton.is-active {
+    border-color: #4dabf7;
+    background: #4dabf7;
+    color: white;
 }
 
 .settingsActionButton,
@@ -1525,6 +1603,21 @@ body {
     font-size: 1.12em;
     font-weight: 900;
     text-shadow: 0 2px 0 rgba(255, 255, 255, .9);
+}
+
+.specialLetterWordVisual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    color: #3267c8;
+    font-size: clamp(46px, 11vw, 92px);
+    font-weight: 900;
+    line-height: 1;
+    text-align: center;
+    text-shadow: 0 4px 0 white, 0 10px 18px rgba(63, 91, 151, .18);
 }
 
 .findObjectCard.is-correct {

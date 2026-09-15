@@ -155,10 +155,14 @@
         isEnabled: () => soundEnabled,
         setEnabled,
         prepare: () => preloadedEffects.forEach((audio) => audio.load()),
-        playLetter: (fileName) => playVoice(fileName ? `${audioRoots.letters}/${fileName}.mp3` : null),
-        playWord: (fileName) => playVoice(fileName ? `${audioRoots.words}/${fileName}.mp3` : null),
-        playInstruction: (fileName, gameNumber) => playVoice(
-            fileName && gameNumber ? `${audioRoots.instructions}/${fileName}_${gameNumber}.mp3` : null
+        playLetter: (fileName, languageId = "ru") => playVoice(
+            fileName ? `${languageId === "en-US" ? "./assets/audio/en-us/letters" : audioRoots.letters}/${fileName}.mp3` : null
+        ),
+        playWord: (fileName, languageId = "ru") => playVoice(
+            fileName ? `${languageId === "en-US" ? "./assets/audio/en-us/words" : audioRoots.words}/${fileName}.mp3` : null
+        ),
+        playInstruction: (fileName, gameNumber, languageId = "ru") => playVoice(
+            fileName && gameNumber ? `${languageId === "en-US" ? "./assets/audio/en-us/instructions" : audioRoots.instructions}/${fileName}_${gameNumber}.mp3` : null
         ),
         playEffect,
         stopVoice,
