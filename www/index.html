@@ -17,9 +17,16 @@
     <!-- Главный экран -->
     <section id="homeScreen" class="screen active">
 
+        <p id="homeLanguagePrompt" class="homeLanguagePrompt"><span lang="ru">Какой алфавит учим?</span> / <span lang="en">Which alphabet?</span> / <span lang="es">¿Qué alfabeto aprendemos?</span></p>
+        <div class="homeLanguageSwitch" role="group" aria-labelledby="homeLanguagePrompt">
+            <button id="homeRussianLanguageButton" class="languageButton is-active" type="button" data-language="ru" aria-pressed="true" lang="ru">Русский</button>
+            <button id="homeEnglishLanguageButton" class="languageButton" type="button" data-language="en-US" aria-pressed="false" lang="en">English</button>
+            <button id="homeSpanishLanguageButton" class="languageButton" type="button" data-language="es-419" aria-pressed="false" lang="es">Español</button>
+        </div>
+
         <div class="logo">
-            <h1>АЗБУКА</h1>
-            <p>Изучаем русский алфавит</p>
+            <h1 id="appTitle">АЗБУКА</h1>
+            <p id="appSubtitle">Изучаем русский алфавит</p>
         </div>
 
         <button id="startButton" class="mainButton">
@@ -44,7 +51,7 @@
                 ←
             </button>
 
-            <h2>Выбери букву</h2>
+            <h2 id="chooseLetterTitle">Выбери букву</h2>
 
             <button id="settingsButton" class="settingsButton" type="button" aria-label="Открыть настройки">
                 ⚙
@@ -53,7 +60,7 @@
         </div>
 
         <div class="overallProgress" aria-label="Общий прогресс">
-            <div class="overallProgressText">Пройдено <strong id="progressText">0 из 33</strong></div>
+            <div class="overallProgressText"><span id="progressLabel">Пройдено</span> <strong id="progressText">0 из 33</strong></div>
             <div class="overallProgressTrack">
                 <div id="progressBarFill" class="overallProgressFill"></div>
             </div>
@@ -71,6 +78,14 @@
         <div class="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
             <h3 id="settingsTitle">Для родителей</h3>
             <p class="settingsDescription">Управление прогрессом ребёнка.</p>
+            <div class="languageSettings" role="group" aria-label="Язык приложения">
+                <span id="languageSettingsLabel" class="languageSettingsLabel">Язык и алфавит</span>
+                <div class="languageButtons">
+                    <button id="russianLanguageButton" class="languageButton is-active" type="button" data-language="ru" aria-pressed="true">Русский алфавит</button>
+                    <button id="englishLanguageButton" class="languageButton" type="button" data-language="en-US" aria-pressed="false">English alphabet</button>
+                    <button id="spanishLanguageButton" class="languageButton" type="button" data-language="es-419" aria-pressed="false">Alfabeto español</button>
+                </div>
+            </div>
             <button id="soundToggleButton" class="settingsActionButton soundToggleButton" type="button" aria-pressed="true">
                 Звук: включён
             </button>
@@ -227,6 +242,8 @@
 
 </div>
 
+<script src="languages/en-us.js"></script>
+<script src="languages/es-419.js"></script>
 <script src="audio.js"></script>
 <script src="app.js"></script>
 

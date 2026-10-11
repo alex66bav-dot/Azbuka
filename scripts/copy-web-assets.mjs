@@ -25,6 +25,9 @@ for (const file of files) {
 await cp(path.join(projectRoot, "assets"), path.join(webDir, "assets"), {
   recursive: true
 });
+await cp(path.join(projectRoot, "languages"), path.join(webDir, "languages"), {
+  recursive: true
+});
 
 if (demoMode) {
   const indexPath = path.join(webDir, "index.html");

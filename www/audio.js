@@ -99,6 +99,28 @@
         });
     }
 
+    function getVoicePath(languageId, category, fileName, gameNumber = null) {
+        if (!fileName || (category === "instructions" && !gameNumber)) {
+            return null;
+        }
+
+        if (languageId === "es-419") {
+            const spanishFileName = fileName === "ñ" ? "enye" : fileName;
+            return `./assets/audio/es-419/${category}/${spanishFileName}${gameNumber ? `_${gameNumber}` : ""}.mp3`;
+        }
+
+        if (languageId === "en-US") {
+            return `./assets/audio/en-us/${category}/${fileName}${gameNumber ? `_${gameNumber}` : ""}.mp3`;
+        }
+
+        if (languageId === "ru") {
+            return `${audioRoots[category]}/${fileName}${gameNumber ? `_${gameNumber}` : ""}.mp3`;
+        }
+
+        // Voice recordings for this language have not been added yet.
+        return null;
+    }
+
     function playEffect(name) {
         if (!soundEnabled || !name) {
             return;
@@ -155,10 +177,10 @@
         isEnabled: () => soundEnabled,
         setEnabled,
         prepare: () => preloadedEffects.forEach((audio) => audio.load()),
-        playLetter: (fileName) => playVoice(fileName ? `${audioRoots.letters}/${fileName}.mp3` : null),
-        playWord: (fileName) => playVoice(fileName ? `${audioRoots.words}/${fileName}.mp3` : null),
-        playInstruction: (fileName, gameNumber) => playVoice(
-            fileName && gameNumber ? `${audioRoots.instructions}/${fileName}_${gameNumber}.mp3` : null
+        playLetter: (fileName, languageId = "ru") => playVoice(getVoicePath(languageId, "letters", fileName)),
+        playWord: (fileName, languageId = "ru") => playVoice(getVoicePath(languageId, "words", fileName)),
+        playInstruction: (fileName, gameNumber, languageId = "ru") => playVoice(
+            getVoicePath(languageId, "instructions", fileName, gameNumber)
         ),
         playEffect,
         stopVoice,

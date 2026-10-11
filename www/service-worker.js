@@ -1,4 +1,4 @@
-const CACHE_VERSION = "azbuka-v8";
+const CACHE_VERSION = "azbuka-v10";
 const CORE_CACHE = `${CACHE_VERSION}-core`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const APP_BASE = new URL("./", self.registration.scope);
@@ -8,6 +8,8 @@ const CORE_ASSETS = [
     "./style.css",
     "./app.js",
     "./audio.js",
+    "./languages/en-us.js",
+    "./languages/es-419.js",
     "./dictionary.json",
     "./manifest.webmanifest",
     "./assets/icons/icon-192.png",

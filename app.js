@@ -286,7 +286,7 @@ function createWords(letter, words) {
     return words.map((word) => createWord(letter, word));
 }
 
-const alphabet = [
+const russianAlphabet = [
     { letter: "А", words: createWords("А", ["Арбуз", "Аист", "Апельсин", "Автобус", "Акула"]) },
     { letter: "Б", words: createWords("Б", ["Бабочка", "Банан", "Белка", "Барабан", "Бегемот"]) },
     { letter: "В", words: createWords("В", ["Велосипед", "Вишня", "Волк", "Ворона", "Ведро"]) },
@@ -322,7 +322,77 @@ const alphabet = [
     { letter: "Я", words: createWords("Я", ["Яблоко", "Ягода", "Якорь", "Ящерица", "Яйцо"]) }
 ];
 
-const FREE_LETTERS = new Set(["А", "Б", "В"]);
+const russianInterface = Object.freeze({
+    appTitle: "АЗБУКА",
+    appSubtitle: "Изучаем русский алфавит",
+    start: "Начать",
+    install: "Установить приложение",
+    chooseLetter: "Выбери букву",
+    progress: "Пройдено",
+    of: "из",
+    demoNotice: "Демо: доступны А, Б и В",
+    parents: "Для родителей",
+    settingsDescription: "Управление прогрессом ребёнка.",
+    language: "Язык и алфавит",
+    soundOn: "Звук: включён",
+    soundOff: "Звук: выключен",
+    resetProgress: "Сбросить весь прогресс",
+    resetQuestion: "Сбросить весь прогресс? Все пройденные буквы снова станут непройденными",
+    cancel: "Отмена",
+    reset: "Сбросить",
+    close: "Закрыть",
+    fullVersion: "Полная версия",
+    lockedLetter: "Эта буква доступна в полной версии приложения",
+    buyFullVersion: "Купить полную версию",
+    purchasePending: "Платёж ожидает подтверждения в Google Play",
+    purchaseCanceled: "Покупка отменена. Полный доступ не был активирован",
+    playUnavailable: "Google Play временно недоступен. Попробуйте ещё раз",
+    openingPlay: "Открываем Google Play…",
+    purchaseUnavailable: "Покупка сейчас недоступна. Попробуйте позже",
+    back: "Назад",
+    letter: "Буква",
+    nextWord: "Следующее слово",
+    balloons: "Шарики",
+    findTwoWords: "Найди два слова",
+    findShadow: "Найди тень",
+    connect: "Соедини линией",
+    driveBus: "Проведи автобус",
+    newCards: "Новые карточки",
+    newShadows: "Новые тени",
+    newRoad: "Новая дорога",
+    repeat: "Повторить",
+    toLetters: "К буквам",
+    startMarker: "Старт",
+    gameChoiceLabel: "Выбор мини-игры",
+    wordCardsLabel: "Карточки слов",
+    sorterBoardLabel: "Перетащи букву к её тени",
+    shadowLetter: "Тень буквы",
+    busBoardLabel: "Проведи автобус по дороге к слову",
+    busLabel: "Автобус",
+    loadingImageLabel: "Загрузка изображения",
+    celebrations: ["Молодец!", "Здорово!", "Отлично!", "Супер!", "Умница!"]
+});
+
+const russianLanguagePack = Object.freeze({
+    id: "ru",
+    label: "Русский алфавит",
+    nativeLabel: "Русский",
+    alphabet: russianAlphabet,
+    freeLetters: ["А", "Б", "В"],
+    textOnlyLetters: ["Ъ", "Ы", "Ь"],
+    interface: russianInterface
+});
+const languagePacks = {
+    ru: russianLanguagePack,
+    "en-US": window.AzbukaLanguages && window.AzbukaLanguages["en-US"],
+    "es-419": window.AzbukaLanguages && window.AzbukaLanguages["es-419"]
+};
+const languageStorageKey = "azbukaLanguage";
+const storedLanguageId = localStorage.getItem(languageStorageKey);
+let currentLanguageId = languagePacks[storedLanguageId] ? storedLanguageId : "ru";
+let currentLanguagePack = languagePacks[currentLanguageId];
+let alphabet = currentLanguagePack.alphabet;
+let FREE_LETTERS = new Set(currentLanguagePack.freeLetters);
 const TEMPORARILY_UNLOCK_ALL_LETTERS = false;
 const GITHUB_PAGES_HOSTNAME = "alex66bav-dot.github.io";
 const androidBilling = window.Capacitor
@@ -359,12 +429,25 @@ function getAccessibleAlphabet() {
 
 let selectedLetter = null;
 let displayedLetterWord = null;
-const wordIndexes = {};
-alphabet.forEach((letterData) => {
-    wordIndexes[letterData.letter] = 0;
-});
+let wordIndexes = createWordIndexes();
+
+function createWordIndexes() {
+    return alphabet.reduce((indexes, letterData) => {
+        indexes[letterData.letter] = 0;
+        return indexes;
+    }, {});
+}
 
 const lettersGrid = document.getElementById("lettersGrid");
+const appTitle = document.getElementById("appTitle");
+const appSubtitle = document.getElementById("appSubtitle");
+const startButton = document.getElementById("startButton");
+const installButton = document.getElementById("installButton");
+const chooseLetterTitle = document.getElementById("chooseLetterTitle");
+const progressLabel = document.getElementById("progressLabel");
+const settingsTitle = document.getElementById("settingsTitle");
+const settingsDescription = document.querySelector(".settingsDescription");
+const languageSettingsLabel = document.getElementById("languageSettingsLabel");
 const bigLetter = document.getElementById("bigLetter");
 const letterTitle = document.getElementById("letterTitle");
 const letterImage = document.getElementById("letterImage");
@@ -388,10 +471,12 @@ const closeFullVersionButton = document.getElementById("closeFullVersionButton")
 const confirmFullVersionButton = document.getElementById("confirmFullVersionButton");
 const showResetConfirmButton = document.getElementById("showResetConfirmButton");
 const resetConfirmBlock = document.getElementById("resetConfirmBlock");
+const resetConfirmText = resetConfirmBlock ? resetConfirmBlock.querySelector("p") : null;
 const cancelResetButton = document.getElementById("cancelResetButton");
 const confirmResetButton = document.getElementById("confirmResetButton");
 const closeSettingsButton = document.getElementById("closeSettingsButton");
 const soundToggleButton = document.getElementById("soundToggleButton");
+const languageButtons = document.querySelectorAll(".languageButton");
 const repeatRoundButton = document.getElementById("repeatRoundButton");
 const playBalloonsGameButton = document.getElementById("playBalloonsGameButton");
 const playSorterGameButton = document.getElementById("playSorterGameButton");
@@ -415,9 +500,9 @@ const busVehicle = document.getElementById("busVehicle");
 const gameChoiceButtons = document.querySelectorAll(".gameChoiceButton");
 const screens = document.querySelectorAll(".screen");
 const balloonColors = ["#ff6b6b", "#4dabf7", "#51cf66", "#ff922b", "#9775fa"];
-const celebrationPhrases = ["Молодец!", "Здорово!", "Отлично!", "Супер!", "Умница!"];
+let celebrationPhrases = currentLanguagePack.interface.celebrations;
 const desktopBalloonSize = 90;
-const totalLettersCount = alphabet.length;
+let totalLettersCount = alphabet.length;
 let correctBalloonsLeft = 0;
 let lastCelebrationPhrase = "";
 let nextRoundTimeout = null;
@@ -455,15 +540,121 @@ const imageCache = new Map();
 const imageRequests = new Map();
 let letterSelectionTimeout = null;
 const letterSelectionDelay = 150;
-const completedLettersStorageKey = "azbukaCompletedLetters";
-const miniGameProgressStorageKey = "azbukaMiniGameProgress";
-const miniGameProgressVersionKey = "azbukaMiniGameProgressVersion";
+let completedLettersStorageKey = getProgressStorageKey("azbukaCompletedLetters");
+let miniGameProgressStorageKey = getProgressStorageKey("azbukaMiniGameProgress");
+let miniGameProgressVersionKey = getProgressStorageKey("azbukaMiniGameProgressVersion");
 const currentMiniGameProgressVersion = 2;
 const miniGameIds = ["game1", "game2", "game3", "game4", "game5"];
-const completedLetters = new Set(loadCompletedLetters());
-const miniGameProgress = loadMiniGameProgress();
+let completedLetters = new Set(loadCompletedLetters());
+let miniGameProgress = loadMiniGameProgress();
 const letterCards = new Map();
 const letterProgressRings = new Map();
+
+function getProgressStorageKey(baseKey) {
+    return currentLanguageId === "ru" ? baseKey : `${baseKey}:${currentLanguageId}`;
+}
+
+function setElementText(element, value) {
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+function applyInterfaceLanguage() {
+    const ui = currentLanguagePack.interface;
+
+    document.documentElement.lang = currentLanguageId === "ru"
+        ? "ru"
+        : currentLanguageId === "es-419" ? "es-419" : "en";
+    document.title = ui.appTitle;
+    setElementText(appTitle, ui.appTitle);
+    setElementText(appSubtitle, ui.appSubtitle);
+    setElementText(startButton, ui.start);
+    setElementText(installButton, ui.install);
+    setElementText(chooseLetterTitle, ui.chooseLetter);
+    setElementText(progressLabel, ui.progress);
+    setElementText(demoNotice, ui.demoNotice);
+    setElementText(settingsTitle, ui.parents);
+    setElementText(settingsDescription, ui.settingsDescription);
+    setElementText(languageSettingsLabel, ui.language);
+    setElementText(showResetConfirmButton, ui.resetProgress);
+    setElementText(resetConfirmText, ui.resetQuestion);
+    setElementText(cancelResetButton, ui.cancel);
+    setElementText(confirmResetButton, ui.reset);
+    setElementText(closeSettingsButton, ui.close);
+    setElementText(document.getElementById("fullVersionTitle"), ui.fullVersion);
+    setElementText(fullVersionText, ui.lockedLetter);
+    setElementText(confirmFullVersionButton, ui.buyFullVersion);
+    setElementText(document.getElementById("backLettersButton"), `← ${ui.back}`);
+    setElementText(nextWordButton, ui.nextWord);
+    setElementText(playBalloonsGameButton, ui.balloons);
+    setElementText(document.getElementById("playGameButton"), ui.findTwoWords);
+    setElementText(playSorterGameButton, ui.findShadow);
+    setElementText(playConnectGameButton, ui.connect);
+    setElementText(playBusGameButton, ui.driveBus);
+    setElementText(backToLettersButton, ui.toLetters);
+    setElementText(busStartMarker, ui.startMarker);
+
+    [
+        [".gameChoicePanel", ui.gameChoiceLabel],
+        ["#findObjectCards", ui.wordCardsLabel],
+        ["#sorterBoard", ui.sorterBoardLabel],
+        ["#busBoard", ui.busBoardLabel],
+        ["#busVehicle", ui.busLabel]
+    ].forEach(([selector, label]) => {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.setAttribute("aria-label", label);
+        }
+    });
+
+    languageButtons.forEach((button) => {
+        const isActive = button.dataset.language === currentLanguageId;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
+    });
+
+    updateSoundToggle();
+    updateProgressUI();
+}
+
+function switchLanguage(languageId) {
+    if (!languagePacks[languageId] || languageId === currentLanguageId) {
+        return;
+    }
+
+    clearTimeout(nextRoundTimeout);
+    stopBalloonAnimation();
+    cancelActiveConnection();
+    resetSorterLetterPosition();
+    currentLanguageId = languageId;
+    currentLanguagePack = languagePacks[currentLanguageId];
+    alphabet = currentLanguagePack.alphabet;
+    FREE_LETTERS = new Set(currentLanguagePack.freeLetters);
+    totalLettersCount = alphabet.length;
+    celebrationPhrases = currentLanguagePack.interface.celebrations;
+    completedLettersStorageKey = getProgressStorageKey("azbukaCompletedLetters");
+    miniGameProgressStorageKey = getProgressStorageKey("azbukaMiniGameProgress");
+    miniGameProgressVersionKey = getProgressStorageKey("azbukaMiniGameProgressVersion");
+    completedLetters = new Set(loadCompletedLetters());
+    miniGameProgress = loadMiniGameProgress();
+    selectedLetter = null;
+    displayedLetterWord = null;
+    wordIndexes = createWordIndexes();
+    lastSpecialFindSets.clear();
+    lastSpecialConnectSets.clear();
+    lastBusWords.clear();
+    lastBusSets.clear();
+    localStorage.setItem(languageStorageKey, currentLanguageId);
+    renderLettersGrid();
+    applyInterfaceLanguage();
+    if (demoNotice) {
+        demoNotice.classList.toggle("hidden", Boolean(androidBilling) || !isDemoMode());
+    }
+    if (!document.getElementById("homeScreen").classList.contains("active")) {
+        showScreen("lettersScreen");
+    }
+}
 
 function addClass(element, className) {
     if (element) {
@@ -485,7 +676,7 @@ function playAudioEffect(name) {
 
 function playGameInstruction(letterData, gameNumber) {
     if (window.AzbukaAudio && letterData) {
-        window.AzbukaAudio.playInstruction(getLetterFolderName(letterData.letter), gameNumber);
+        window.AzbukaAudio.playInstruction(getLetterFolderName(letterData.letter), gameNumber, currentLanguageId);
     }
 }
 
@@ -583,6 +774,9 @@ function loadMiniGameProgress() {
     });
 
     try {
+        if (storedVersion < currentMiniGameProgressVersion) {
+            localStorage.setItem(miniGameProgressStorageKey, JSON.stringify(fallbackProgress));
+        }
         localStorage.setItem(miniGameProgressVersionKey, String(currentMiniGameProgressVersion));
     } catch (error) {
         // Progress migration stays available in memory.
@@ -596,7 +790,7 @@ function updateProgressUI() {
     const progressPercent = Math.round((completedCount / totalLettersCount) * 100);
 
     if (progressText) {
-        progressText.textContent = `${completedCount} из ${totalLettersCount}`;
+        progressText.textContent = `${completedCount} ${currentLanguagePack.interface.of} ${totalLettersCount}`;
     }
 
     if (progressBarFill) {
@@ -767,7 +961,9 @@ function updateSoundToggle() {
     }
 
     const isEnabled = window.AzbukaAudio.isEnabled();
-    soundToggleButton.textContent = `Звук: ${isEnabled ? "включён" : "выключен"}`;
+    soundToggleButton.textContent = isEnabled
+        ? currentLanguagePack.interface.soundOn
+        : currentLanguagePack.interface.soundOff;
     soundToggleButton.setAttribute("aria-pressed", String(isEnabled));
 }
 
@@ -843,7 +1039,7 @@ function createLoadingIndicator() {
 
     indicator.className = "imageLoadingIndicator";
     indicator.setAttribute("role", "status");
-    indicator.setAttribute("aria-label", "Загрузка изображения");
+    indicator.setAttribute("aria-label", currentLanguagePack.interface.loadingImageLabel);
     return indicator;
 }
 
@@ -961,7 +1157,19 @@ function displayLetterWord(word) {
     wordCard.className = "wordCard";
     wordCard.textContent = word.text;
     wordsBlock.appendChild(wordCard);
-    showWordImage(word);
+
+    if (isSpecialLetter(selectedLetter.letter)) {
+        const wordVisual = document.createElement("div");
+
+        wordVisual.className = "specialLetterWordVisual imageVisual is-visible";
+        appendHighlightedSpecialWord(wordVisual, word.text, selectedLetter.letter);
+        letterImage.textContent = "";
+        letterImage.appendChild(wordVisual);
+        currentImagePath = null;
+        clearImageRetry();
+    } else {
+        showWordImage(word);
+    }
 }
 
 function showNextLetterWord() {
@@ -975,7 +1183,7 @@ function showNextLetterWord() {
     wordIndexes[selectedLetter.letter] = (wordIndex + 1) % selectedLetter.words.length;
     displayLetterWord(word);
     if (window.AzbukaAudio) {
-        window.AzbukaAudio.playWord(word.audio);
+        window.AzbukaAudio.playWord(word.audio, currentLanguageId);
     }
 }
 
@@ -990,17 +1198,18 @@ function showLetter(letterData) {
 
     wordIndexes[selectedLetter.letter] = (wordIndex + 1) % selectedLetter.words.length;
     bigLetter.textContent = selectedLetter.letter;
-    letterTitle.textContent = `Буква ${selectedLetter.letter}`;
+    letterTitle.textContent = `${currentLanguagePack.interface.letter} ${selectedLetter.letter}`;
     setActiveGameChoice(activeGameMode);
     displayLetterWord(word);
     showScreen("letterScreen");
     if (window.AzbukaAudio) {
-        window.AzbukaAudio.playLetter(getLetterFolderName(letterData.letter));
+        window.AzbukaAudio.playLetter(getLetterFolderName(letterData.letter), currentLanguageId);
     }
 }
 
 function isSpecialLetter(letter) {
-    return letter === "Ъ" || letter === "Ь" || letter === "Ы";
+    return Boolean(currentLanguagePack.textOnlyLetters
+        && currentLanguagePack.textOnlyLetters.includes(letter));
 }
 
 function createSpecialWordItem(word, specialCharacter) {
@@ -1010,7 +1219,30 @@ function createSpecialWordItem(word, specialCharacter) {
     };
 }
 
+function createTextOnlyWord(text) {
+    return {
+        text,
+        audio: text.toLowerCase().replace(/[^a-z0-9а-яё]+/gi, "-")
+    };
+}
+
+function getCorrectSpecialWords(letterData) {
+    const configuredPool = currentLanguagePack.containedLetterWordPools
+        && currentLanguagePack.containedLetterWordPools[letterData.letter];
+
+    return configuredPool
+        ? configuredPool.map((text) => createTextOnlyWord(text))
+        : letterData.words;
+}
+
 function getOtherSpecialWords(letter) {
+    const exclusivePool = currentLanguagePack.exclusiveDistractorWordPools
+        && currentLanguagePack.exclusiveDistractorWordPools[letter];
+
+    if (exclusivePool) {
+        return exclusivePool.map((text) => createSpecialWordItem(createTextOnlyWord(text), null));
+    }
+
     return alphabet
         .filter((candidate) => isSpecialLetter(candidate.letter) && candidate.letter !== letter)
         .reduce((words, candidate) => words.concat(
@@ -1042,7 +1274,7 @@ function buildSpecialWordSet(letterData, correctCount, wrongCount, previousSets)
     const previousSignature = previousSets.get(letterData.letter);
 
     for (let attempt = 0; attempt < 8; attempt += 1) {
-        const correctWords = shuffleArray(letterData.words)
+        const correctWords = shuffleArray(getCorrectSpecialWords(letterData))
             .slice(0, correctCount)
             .map((word) => createSpecialWordItem(word, letterData.letter));
         const otherWords = shuffleArray(getOtherSpecialWords(letterData.letter)).slice(0, wrongCount);
@@ -1059,15 +1291,39 @@ function buildSpecialWordSet(letterData, correctCount, wrongCount, previousSets)
     return nextItems;
 }
 
+function getOrdinaryGameWords(letterData, forDistractors = false) {
+    if (currentLanguageId === "ru") {
+        return letterData.words;
+    }
+
+    // Text-only cards never enter ordinary image pools.
+    if (isSpecialLetter(letterData.letter)) {
+        return [];
+    }
+
+    // Keep native words (such as F/Fox) as correct cards for their own letter.
+    if (!forDistractors) {
+        return letterData.words;
+    }
+
+    const reservedWords = new Set([
+        ...Object.values(currentLanguagePack.containedLetterWordPools || {}).flat(),
+        ...Object.values(currentLanguagePack.exclusiveDistractorWordPools || {}).flat()
+    ]
+        .map((text) => text.toLowerCase()));
+
+    return letterData.words.filter((word) => !reservedWords.has(word.text.toLowerCase()));
+}
+
 function buildFindObjectRound(letterData) {
     if (isSpecialLetter(letterData.letter)) {
         return buildSpecialWordSet(letterData, 2, 4, lastSpecialFindSets);
     }
 
-    const correctWords = shuffleArray(letterData.words).slice(0, 2);
+    const correctWords = shuffleArray(getOrdinaryGameWords(letterData)).slice(0, 2);
     const otherWords = shuffleArray(getAccessibleAlphabet()
         .filter((candidate) => candidate.letter !== letterData.letter)
-        .reduce((words, candidate) => words.concat(candidate.words), [])
+        .reduce((words, candidate) => words.concat(getOrdinaryGameWords(candidate, true)), [])
         .map((word) => ({ ...word }))
     ).slice(0, 4);
 
@@ -1076,7 +1332,11 @@ function buildFindObjectRound(letterData) {
 
 function isCorrectFindObjectWord(word, letterData) {
     const selectedLetter = letterData.letter.toLowerCase();
-    const wordText = word.text.toLowerCase();
+    // Ignore Spanish vowel accents only when matching; preserve the displayed word.
+    const wordText = currentLanguageId === "es-419"
+        ? word.text.toLowerCase().normalize("NFC").replace(/[áéíóú]/g, (vowel) =>
+            ({ á: "a", é: "e", í: "i", ó: "o", ú: "u" })[vowel])
+        : word.text.toLowerCase();
 
     if (isSpecialLetter(letterData.letter)) {
         return word.specialCharacter === letterData.letter;
@@ -1130,11 +1390,19 @@ function showFindObjectRound(letterData) {
     findObjectCorrectFound = 0;
     findObjectRoundCompleted = false;
     document.querySelector(".gameTitle").textContent = "";
-    repeatRoundButton.textContent = "Новые карточки";
+    repeatRoundButton.textContent = currentLanguagePack.interface.newCards;
     clearTimeout(nextRoundTimeout);
     stopBalloonAnimation();
 
-    if (letterData.letter === "Ъ") {
+    if (currentLanguageId === "es-419" && isSpecialLetter(letterData.letter)) {
+        setGameScreenTitle("Encuentra dos palabras que contienen la letra ", letterData.letter);
+    } else if (currentLanguageId === "es-419") {
+        setGameScreenTitle("Encuentra dos palabras que empiezan con la letra ", letterData.letter);
+    } else if (currentLanguageId === "en-US" && isSpecialLetter(letterData.letter)) {
+        setGameScreenTitle("Find two words containing the letter ", letterData.letter);
+    } else if (currentLanguageId === "en-US") {
+        setGameScreenTitle("Find two words beginning with ", letterData.letter);
+    } else if (letterData.letter === "Ъ") {
         setGameScreenTitle("Найди два слова, в которых есть ", "твёрдый знак");
     } else if (letterData.letter === "Ь") {
         setGameScreenTitle("Найди два слова, в которых есть ", "мягкий знак");
@@ -1238,7 +1506,7 @@ function completeSorterGame(targetShadow) {
     addClass(sorterLetter, "is-complete");
     targetShadow.classList.add("is-matched");
     recordMiniGameProgress(selectedLetter.letter, "game3");
-    repeatRoundButton.textContent = "Повторить";
+    repeatRoundButton.textContent = currentLanguagePack.interface.repeat;
     repeatRoundButton.classList.remove("hidden");
     removeClass(backToLettersButton, "hidden");
     playAudioEffect("win");
@@ -1352,10 +1620,14 @@ function showSorterRound(letterData) {
         sorterBottomShadows.textContent = "";
     }
     sorterLetter.textContent = letterData.letter;
-    sorterLetter.setAttribute("aria-label", `Буква ${letterData.letter}`);
+    sorterLetter.setAttribute("aria-label", `${currentLanguagePack.interface.letter} ${letterData.letter}`);
     sorterLetter.classList.remove("is-complete");
     resetSorterLetterPosition();
-    if (letterData.letter === "Ъ") {
+    if (currentLanguageId === "es-419") {
+        setGameScreenTitle("Arrastra la letra ", letterData.letter, " hasta su sombra");
+    } else if (currentLanguageId === "en-US") {
+        setGameScreenTitle("Drag the letter ", letterData.letter, " to its shadow");
+    } else if (letterData.letter === "Ъ") {
         setGameScreenTitle("Перетащи ", "твёрдый знак", " к его тени");
     } else if (letterData.letter === "Ь") {
         setGameScreenTitle("Перетащи ", "мягкий знак", " к его тени");
@@ -1363,7 +1635,7 @@ function showSorterRound(letterData) {
         setGameScreenTitle("Перетащи букву ", letterData.letter, " к её тени");
     }
     document.querySelector(".gameTitle").textContent = "";
-    repeatRoundButton.textContent = "Новые тени";
+    repeatRoundButton.textContent = currentLanguagePack.interface.newShadows;
     repeatRoundButton.classList.remove("hidden");
     addClass(backToLettersButton, "hidden");
     resetCelebrationOverlay();
@@ -1375,7 +1647,7 @@ function showSorterRound(letterData) {
         shadow.className = "sorterShadow";
         shadow.textContent = letter;
         shadow.dataset.correct = String(letter === letterData.letter);
-        shadow.setAttribute("aria-label", `Тень буквы ${letter}`);
+        shadow.setAttribute("aria-label", `${currentLanguagePack.interface.shadowLetter} ${letter}`);
         const shadowRow = index < 4 ? sorterTopShadows : sorterBottomShadows;
 
         if (shadowRow) {
@@ -1397,7 +1669,7 @@ function buildConnectLineRound(letterData) {
         : null;
     const correctSource = usesSpecialWords
         ? sourceItems.filter((item) => item.specialCharacter === letterData.letter)
-        : shuffleArray(letterData.words).slice(0, 2);
+        : shuffleArray(getOrdinaryGameWords(letterData)).slice(0, 2);
     const correctItems = correctSource.map((word, index) => ({
         id: `correct-${index}`,
         word,
@@ -1408,7 +1680,7 @@ function buildConnectLineRound(letterData) {
         ? sourceItems.filter((item) => item.specialCharacter !== letterData.letter)
         : getAccessibleAlphabet()
             .filter((item) => item.letter !== letterData.letter)
-            .reduce((words, item) => words.concat(item.words), []);
+            .reduce((words, item) => words.concat(getOrdinaryGameWords(item, true)), []);
     const wrongItems = shuffleArray(wrongWordPool).slice(0, 6).map((wordItem, index) => ({
         id: `wrong-${index}`,
         word: wordItem,
@@ -1477,7 +1749,7 @@ function cancelActiveConnection(animate = false) {
 function completeConnectLineGame() {
     connectRoundCompleted = true;
     recordMiniGameProgress(selectedLetter.letter, "game4");
-    repeatRoundButton.textContent = "Повторить";
+    repeatRoundButton.textContent = currentLanguagePack.interface.repeat;
     repeatRoundButton.classList.remove("hidden");
     removeClass(backToLettersButton, "hidden");
     playAudioEffect("win");
@@ -1569,7 +1841,19 @@ function showConnectLineRound(letterData) {
     clearTimeout(nextRoundTimeout);
     stopBalloonAnimation();
 
-    if (letterData.letter === "Ъ") {
+    if (currentLanguageId === "es-419" && isSpecialLetter(letterData.letter)) {
+        setGameScreenTitle("Une la letra ", letterData.letter, ` con dos palabras que contienen la letra ${letterData.letter}`);
+        connectLineBoard.setAttribute("aria-label", `Une la letra ${letterData.letter} con dos palabras que contienen la letra ${letterData.letter}`);
+    } else if (currentLanguageId === "es-419") {
+        setGameScreenTitle("Une la letra ", letterData.letter, " con las dos imágenes cuyos nombres empiezan con esa letra");
+        connectLineBoard.setAttribute("aria-label", `Une la letra ${letterData.letter} con las dos imágenes cuyos nombres empiezan con esa letra`);
+    } else if (currentLanguageId === "en-US" && isSpecialLetter(letterData.letter)) {
+        setGameScreenTitle("Connect the letter ", letterData.letter, " to two words containing X");
+        connectLineBoard.setAttribute("aria-label", "Connect the letter X to two words containing X");
+    } else if (currentLanguageId === "en-US") {
+        setGameScreenTitle("Connect the letter ", letterData.letter, " to two matching pictures");
+        connectLineBoard.setAttribute("aria-label", `Connect the letter ${letterData.letter} to two matching pictures`);
+    } else if (letterData.letter === "Ъ") {
         setGameScreenTitle("Соедини ", "твёрдый знак", " с двумя словами, в которых есть твёрдый знак");
         connectLineBoard.setAttribute("aria-label", "Соедини твёрдый знак с двумя словами, в которых есть твёрдый знак");
     } else if (letterData.letter === "Ь") {
@@ -1592,8 +1876,8 @@ function showConnectLineRound(letterData) {
     connectRightImages.textContent = "";
     connectLines.textContent = "";
     connectCenterLetter.textContent = letterData.letter;
-    connectCenterLetter.setAttribute("aria-label", `Буква ${letterData.letter}`);
-    repeatRoundButton.textContent = "Новые карточки";
+    connectCenterLetter.setAttribute("aria-label", `${currentLanguagePack.interface.letter} ${letterData.letter}`);
+    repeatRoundButton.textContent = currentLanguagePack.interface.newCards;
     repeatRoundButton.classList.remove("hidden");
     addClass(backToLettersButton, "hidden");
     addClass(balloons, "hidden");
@@ -1672,9 +1956,10 @@ function getNextBusRouteSet() {
 
 function getNextBusWord(letterData) {
     const previousWord = lastBusWords.get(letterData.letter);
-    const availableWords = letterData.words.filter((word) => word.text !== previousWord);
+    const sourceWords = getOrdinaryGameWords(letterData);
+    const availableWords = sourceWords.filter((word) => word.text !== previousWord);
     const randomWord = availableWords[Math.floor(Math.random() * availableWords.length)];
-    const nextWord = randomWord !== undefined ? randomWord : letterData.words[0];
+    const nextWord = randomWord !== undefined ? randomWord : sourceWords[0];
 
     lastBusWords.set(letterData.letter, nextWord.text);
     return nextWord;
@@ -1691,7 +1976,7 @@ function buildBusRound(letterData) {
     const correctWord = getNextBusWord(letterData);
     const wrongWords = shuffleArray(getAccessibleAlphabet()
         .filter((candidate) => candidate.letter !== letterData.letter)
-        .reduce((words, candidate) => words.concat(candidate.words), [])
+        .reduce((words, candidate) => words.concat(getOrdinaryGameWords(candidate, true)), [])
     ).slice(0, 2);
 
     return shuffleArray([
@@ -1840,7 +2125,7 @@ function updateLetterAccessUI() {
         if (isUnlocked) {
             card.setAttribute("aria-label", letterData.letter);
         } else {
-            card.setAttribute("aria-label", `${letterData.letter}, доступна в полной версии`);
+            card.setAttribute("aria-label", `${letterData.letter}, ${currentLanguagePack.interface.lockedLetter}`);
         }
         updateLetterCardProgress(letterData.letter);
     });
@@ -1863,11 +2148,11 @@ function applyBillingState(state) {
         return;
     }
     if (state.status === "pending") {
-        fullVersionText.textContent = "Платёж ожидает подтверждения в Google Play";
+        fullVersionText.textContent = currentLanguagePack.interface.purchasePending;
     } else if (state.status === "canceled") {
-        fullVersionText.textContent = "Покупка отменена. Полный доступ не был активирован";
+        fullVersionText.textContent = currentLanguagePack.interface.purchaseCanceled;
     } else if (["error", "unavailable", "disconnected", "acknowledgement_error"].includes(state.status)) {
-        fullVersionText.textContent = "Google Play временно недоступен. Попробуйте ещё раз";
+        fullVersionText.textContent = currentLanguagePack.interface.playUnavailable;
     }
 }
 
@@ -1892,7 +2177,7 @@ async function purchaseFullAccess() {
 
     confirmFullVersionButton.disabled = true;
     if (fullVersionText) {
-        fullVersionText.textContent = "Открываем Google Play…";
+        fullVersionText.textContent = currentLanguagePack.interface.openingPlay;
     }
 
     try {
@@ -1901,7 +2186,7 @@ async function purchaseFullAccess() {
         if (fullVersionText) {
             fullVersionText.textContent = error && error.message
                 ? error.message
-                : "Покупка сейчас недоступна. Попробуйте позже";
+                : currentLanguagePack.interface.purchaseUnavailable;
         }
     } finally {
         confirmFullVersionButton.disabled = false;
@@ -2087,7 +2372,7 @@ function completeBusGame(destination) {
     busVehicle.classList.add("is-arrived");
     destination.classList.add("is-reached");
     recordMiniGameProgress(selectedLetter.letter, "game5");
-    repeatRoundButton.textContent = "Повторить";
+    repeatRoundButton.textContent = currentLanguagePack.interface.repeat;
     repeatRoundButton.classList.remove("hidden");
     removeClass(backToLettersButton, "hidden");
     playAudioEffect("win");
@@ -2121,7 +2406,15 @@ function showBusRound(letterData) {
     createBusRouteStates(options, routes);
     createBusDestinations();
 
-    if (letterData.letter === "Ъ") {
+    if (currentLanguageId === "es-419" && isSpecialLetter(letterData.letter)) {
+        setGameScreenTitle("Conduce el autobús hasta una palabra que contiene la letra ", letterData.letter);
+    } else if (currentLanguageId === "es-419") {
+        setGameScreenTitle("Conduce el autobús hasta una palabra que empieza con la letra ", letterData.letter);
+    } else if (currentLanguageId === "en-US" && isSpecialLetter(letterData.letter)) {
+        setGameScreenTitle("Drive the bus to a word containing the letter ", letterData.letter);
+    } else if (currentLanguageId === "en-US") {
+        setGameScreenTitle("Drive the bus to a word beginning with ", letterData.letter);
+    } else if (letterData.letter === "Ъ") {
         setGameScreenTitle("Проведи автобус к слову, в котором есть ", "твёрдый знак");
     } else if (letterData.letter === "Ь") {
         setGameScreenTitle("Проведи автобус к слову, в котором есть ", "мягкий знак");
@@ -2132,7 +2425,7 @@ function showBusRound(letterData) {
     }
 
     document.querySelector(".gameTitle").textContent = "";
-    repeatRoundButton.textContent = "Новая дорога";
+    repeatRoundButton.textContent = currentLanguagePack.interface.newRoad;
     repeatRoundButton.classList.remove("hidden");
     addClass(backToLettersButton, "hidden");
     resetCelebrationOverlay();
@@ -2187,7 +2480,7 @@ function completeFindObjectGame() {
     }
 
     if (repeatRoundButton) {
-        repeatRoundButton.textContent = "Повторить";
+        repeatRoundButton.textContent = currentLanguagePack.interface.repeat;
         repeatRoundButton.classList.remove("hidden");
     }
 
@@ -2398,7 +2691,7 @@ function finishRound() {
     recordMiniGameCompletion(selectedLetter.letter);
     stopBalloonAnimation();
     balloons.innerHTML = "";
-    repeatRoundButton.textContent = "Повторить";
+    repeatRoundButton.textContent = currentLanguagePack.interface.repeat;
     repeatRoundButton.classList.remove("hidden");
     removeClass(backToLettersButton, "hidden");
     showCelebrationPhrase(getCelebrationPhrase());
@@ -2462,7 +2755,11 @@ function showBalloonGame(letterData) {
     removeClass(balloons, "hidden");
     addClass(repeatRoundButton, "hidden");
     addClass(backToLettersButton, "hidden");
-    if (letterData.letter === "Ъ") {
+    if (currentLanguageId === "es-419") {
+        setGameScreenTitle("Revienta tres globos con la letra ", letterData.letter);
+    } else if (currentLanguageId === "en-US") {
+        setGameScreenTitle("Pop three balloons with the letter ", letterData.letter);
+    } else if (letterData.letter === "Ъ") {
         setGameScreenTitle("Лопни три шарика с ", "твёрдым знаком");
     } else if (letterData.letter === "Ь") {
         setGameScreenTitle("Лопни три шарика с ", "мягким знаком");
@@ -2537,7 +2834,12 @@ function createGameRound() {
     startBalloonAnimation();
 }
 
-alphabet.forEach((letterData) => {
+function renderLettersGrid() {
+    lettersGrid.textContent = "";
+    letterCards.clear();
+    letterProgressRings.clear();
+
+    alphabet.forEach((letterData) => {
     const wrapper = document.createElement("div");
     const ring = document.createElement("div");
     const card = document.createElement("div");
@@ -2553,7 +2855,7 @@ alphabet.forEach((letterData) => {
 
         wrapper.classList.add("is-locked");
         card.classList.add("is-locked");
-        card.setAttribute("aria-label", `${letterData.letter}, доступна в полной версии`);
+        card.setAttribute("aria-label", `${letterData.letter}, ${currentLanguagePack.interface.lockedLetter}`);
         lock.className = "letterLock";
         lock.textContent = "🔒";
         lock.setAttribute("aria-hidden", "true");
@@ -2581,7 +2883,9 @@ alphabet.forEach((letterData) => {
             return;
         }
 
-        preloadWordImages(letterData.words);
+        if (!isSpecialLetter(letterData.letter)) {
+            preloadWordImages(letterData.words);
+        }
 
         if (letterSelectionTimeout !== null) {
             return;
@@ -2592,8 +2896,12 @@ alphabet.forEach((letterData) => {
             showLetter(letterData);
         }, letterSelectionDelay);
     });
-    lettersGrid.appendChild(wrapper);
-});
+        lettersGrid.appendChild(wrapper);
+    });
+}
+
+renderLettersGrid();
+applyInterfaceLanguage();
 
 if (demoNotice) {
     demoNotice.classList.toggle("hidden", Boolean(androidBilling) || !isDemoMode());
@@ -2605,7 +2913,7 @@ initializeAndroidBilling();
 if (letterImage) {
     letterImage.addEventListener("click", () => {
         if (window.AzbukaAudio) {
-            window.AzbukaAudio.playWord(displayedLetterWord ? displayedLetterWord.audio : null);
+            window.AzbukaAudio.playWord(displayedLetterWord ? displayedLetterWord.audio : null, currentLanguageId);
         }
     });
 }
@@ -2613,7 +2921,7 @@ if (letterImage) {
 if (wordsBlock) {
     wordsBlock.addEventListener("click", () => {
         if (window.AzbukaAudio) {
-            window.AzbukaAudio.playWord(displayedLetterWord ? displayedLetterWord.audio : null);
+            window.AzbukaAudio.playWord(displayedLetterWord ? displayedLetterWord.audio : null, currentLanguageId);
         }
     });
 }
@@ -2621,7 +2929,7 @@ if (wordsBlock) {
 if (bigLetter) {
     bigLetter.addEventListener("click", () => {
         if (window.AzbukaAudio && selectedLetter) {
-            window.AzbukaAudio.playLetter(getLetterFolderName(selectedLetter.letter));
+            window.AzbukaAudio.playLetter(getLetterFolderName(selectedLetter.letter), currentLanguageId);
         }
     });
 }
@@ -2641,7 +2949,6 @@ document.getElementById("startButton").addEventListener("click", () => {
     showScreen("lettersScreen");
 });
 
-const installButton = document.getElementById("installButton");
 let deferredInstallPrompt = null;
 
 function isInstalledApp() {
@@ -2783,6 +3090,14 @@ if (settingsOverlay) {
 if (closeFullVersionButton) {
     closeFullVersionButton.addEventListener("click", closeFullVersionModal);
 }
+
+languageButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        playAudioEffect("click");
+        switchLanguage(button.dataset.language);
+        closeSettingsModal();
+    });
+});
 if (confirmFullVersionButton) {
     confirmFullVersionButton.addEventListener("click", purchaseFullAccess);
 }
